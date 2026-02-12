@@ -892,7 +892,20 @@ namespace ProAppAddInSdeSearch
 
         #region Metadata
 
-        private void TryLoadMetadata(SdeDatasetItem item, Definition definition)
+        private void TryLoadMetadata(SdeDatasetItem item, TableDefinition definition)
+        {
+            try
+            {
+                string xml = definition.GetDescription();
+                if (string.IsNullOrEmpty(xml)) return;
+                item.HasMetadata = true;
+                item.RawMetadataXml = xml;
+                ParseMetadataXml(item, xml);
+            }
+            catch { }
+        }
+
+        private void TryLoadMetadata(SdeDatasetItem item, FeatureDatasetDefinition definition)
         {
             try
             {
@@ -1163,6 +1176,7 @@ namespace ProAppAddInSdeSearch
         public string DisplayName => ConnectionType == "Manual" ? $"{Name}  (manual)" : Name;
         public override string ToString() => DisplayName;
         public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
     }
 
     public class SdeDatasetItem : INotifyPropertyChanged
@@ -1250,6 +1264,7 @@ namespace ProAppAddInSdeSearch
             }
         }
         public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
     }
 
     // ═══════════════════════════════════════════════════
