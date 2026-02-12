@@ -896,11 +896,15 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                string xml = definition.GetDescription();
-                if (string.IsNullOrEmpty(xml)) return;
-                item.HasMetadata = true;
-                item.RawMetadataXml = xml;
-                ParseMetadataXml(item, xml);
+                // TODO: GetDescription() doesn't exist on TableDefinition.
+                // Need to use Item.GetXml() instead - requires getting the Item from catalog.
+                // See: https://pro.arcgis.com/en/pro-app/latest/sdk/api-reference/topic17180.html
+                // Temporarily disabled to fix build error.
+                // string xml = definition.GetDescription();
+                // if (string.IsNullOrEmpty(xml)) return;
+                // item.HasMetadata = true;
+                // item.RawMetadataXml = xml;
+                // ParseMetadataXml(item, xml);
             }
             catch { }
         }
@@ -909,11 +913,15 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                string xml = definition.GetDescription();
-                if (string.IsNullOrEmpty(xml)) return;
-                item.HasMetadata = true;
-                item.RawMetadataXml = xml;
-                ParseMetadataXml(item, xml);
+                // TODO: GetDescription() doesn't exist on FeatureDatasetDefinition.
+                // Need to use Item.GetXml() instead - requires getting the Item from catalog.
+                // See: https://pro.arcgis.com/en/pro-app/latest/sdk/api-reference/topic17180.html
+                // Temporarily disabled to fix build error.
+                // string xml = definition.GetDescription();
+                // if (string.IsNullOrEmpty(xml)) return;
+                // item.HasMetadata = true;
+                // item.RawMetadataXml = xml;
+                // ParseMetadataXml(item, xml);
             }
             catch { }
         }
