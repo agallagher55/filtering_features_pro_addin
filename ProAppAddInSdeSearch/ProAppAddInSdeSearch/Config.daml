@@ -1,0 +1,35 @@
+﻿<ArcGIS defaultAssembly="ProAppAddInSdeSearch.dll" defaultNamespace="ProAppAddInSdeSearch" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <AddInInfo id="{a73f5d21-b8e4-4c9a-a620-7e3d1f6c8b55}" version="1.0" desktopVersion="3.3.0.52636">
+    <n>SDE Search</n>
+    <Description>Search enterprise SDE geodatabase items by name or metadata</Description>
+    <Image>Images\AddinDesktop32.png</Image>
+    <Author>gallaga</Author>
+    <Company>HRM</Company>
+    <Date>2/12/2026 10:00:00 AM</Date>
+    <Subject>Framework</Subject>
+  </AddInInfo>
+  <modules>
+    <insertModule id="ProAppAddInSdeSearch_Module" className="Module1" autoLoad="false" caption="SDE Search">
+      <tabs>
+      </tabs>
+      <groups>
+        <group id="ProAppAddInSdeSearch_Group1" caption="SDE Search" appearsOnAddInTab="true" keytip="G1">
+          <button refID="ProAppAddInSdeSearch_Dockpane1_ShowButton" size="large" />
+        </group>
+      </groups>
+		
+      <controls>
+        <button id="ProAppAddInSdeSearch_Dockpane1_ShowButton" caption="SDE Search" className="Dockpane1_ShowButton" loadOnClick="true" smallImage="GenericButtonPurple16" largeImage="GenericButtonPurple32" keytip="SS">
+          <tooltip heading="SDE Search">Search enterprise SDE geodatabase items by name or metadata<disabledText /></tooltip>
+        </button>
+      </controls>
+		
+      <dockPanes>
+        <dockPane id="ProAppAddInSdeSearch_Dockpane1" caption="SDE Search" className="SdeSearchPaneViewModel" dock="group" dockWith="esri_core_projectDockPane">
+          <content className="SdeSearchPaneView" />
+        </dockPane>
+      </dockPanes>
+		
+    </insertModule>
+  </modules>
+</ArcGIS>
