@@ -212,9 +212,8 @@
         <Border Grid.Row="1" Background="{StaticResource DarkBackgroundAltBrush}" Padding="12,8" 
                 BorderBrush="{StaticResource DarkBorderBrush}" BorderThickness="0,0,0,1">
             <StackPanel>
-                <TextBlock Text="DATABASE CONNECTION" FontSize="10" FontWeight="SemiBold" 
-                           Foreground="{StaticResource BitcoinYellowBrush}" Margin="0,0,0,6"
-                           LetterSpacing="0.5"/>
+                <TextBlock Text="DATABASE CONNECTION" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{StaticResource BitcoinYellowBrush}" Margin="0,0,0,6"/>
                 <ComboBox ItemsSource="{Binding Connections}" 
                           SelectedItem="{Binding SelectedConnection, Mode=TwoWay}"
                           Style="{StaticResource BitcoinComboBox}"

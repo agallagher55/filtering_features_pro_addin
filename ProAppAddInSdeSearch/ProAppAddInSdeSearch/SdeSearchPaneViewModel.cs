@@ -585,21 +585,20 @@ namespace ProAppAddInSdeSearch
 
         /// <summary>
         /// Attempt to read metadata (description, tags, summary) from the definition
+        /// Note: Geodatabase Definition objects don't expose metadata directly in ArcGIS Pro SDK.
+        /// Metadata access requires using the Item API from the catalog/project context.
         /// </summary>
         private void TryLoadMetadata(SdeDatasetItem item, Definition definition)
         {
             try
             {
-                // GetDescription returns the XML metadata string for the dataset
-                string metadataXml = definition.GetDescription();
-                if (!string.IsNullOrEmpty(metadataXml))
-                {
-                    item.HasMetadata = true;
-                    item.RawMetadataXml = metadataXml;
+                // TODO: Metadata for geodatabase items needs to be accessed via Item API
+                // Definition class doesn't have GetDescription() or GetMetadata() methods
+                // Consider using MapView.Active.Map.GetLayersAsFlattenedList() and then
+                // accessing layer.GetMetadata() for items added to the map
 
-                    // Parse key metadata fields from the XML
-                    ParseMetadataXml(item, metadataXml);
-                }
+                // For now, metadata loading is disabled for direct geodatabase access
+                item.HasMetadata = false;
             }
             catch (Exception ex)
             {
