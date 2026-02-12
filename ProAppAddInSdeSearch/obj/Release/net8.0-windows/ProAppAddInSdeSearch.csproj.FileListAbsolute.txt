@@ -1,0 +1,5 @@
+C:\Users\gallaga\source\repos\ProAppAddInSdeSearch\ProAppAddInSdeSearch\obj\Release\net8.0-windows\ProAppAddInSdeSearch.csproj.AssemblyReference.cache
+C:\Users\gallaga\source\repos\ProAppAddInSdeSearch\ProAppAddInSdeSearch\obj\Release\net8.0-windows\SdeSearchPaneView.g.cs
+C:\Users\gallaga\source\repos\ProAppAddInSdeSearch\ProAppAddInSdeSearch\obj\Release\net8.0-windows\GeneratedInternalTypeHelper.g.cs
+C:\Users\gallaga\source\repos\ProAppAddInSdeSearch\ProAppAddInSdeSearch\obj\Release\net8.0-windows\ProAppAddInSdeSearch_MarkupCompile.cache
+C:\Users\gallaga\source\repos\ProAppAddInSdeSearch\ProAppAddInSdeSearch\obj\Release\net8.0-windows\ProAppAddInSdeSearch_MarkupCompile.lref
