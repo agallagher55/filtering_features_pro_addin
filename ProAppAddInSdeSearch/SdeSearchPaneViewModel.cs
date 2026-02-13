@@ -405,18 +405,20 @@ namespace ProAppAddInSdeSearch
                     {
                         int total = 0;
 
-                        // ── Feature Datasets ─────────────────────
+                        // ── Feature Datasets + their contained feature classes ─────────────────────
                         ReportProgress("Enumerating feature datasets...");
+                        var featureDatasetMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                         try
                         {
                             foreach (var def in gdb.GetDefinitions<FeatureDatasetDefinition>())
                             {
                                 try
                                 {
+                                    var fdName = def.GetName();
                                     var item = new SdeDatasetItem
                                     {
-                                        Name = def.GetName(),
-                                        SimpleName = GetSimpleName(def.GetName()),
+                                        Name = fdName,
+                                        SimpleName = GetSimpleName(fdName),
                                         DatasetType = "Feature Dataset",
                                         GeometryIconType = "Dataset",
                                         CanAddToMap = false,
@@ -428,6 +430,25 @@ namespace ProAppAddInSdeSearch
 
                                     _allDatasets.Add(item);
                                     total++;
+
+                                    // Enumerate feature classes within this feature dataset
+                                    try
+                                    {
+                                        using (var fd = gdb.OpenDataset<FeatureDataset>(fdName))
+                                        {
+                                            foreach (var fcDef in fd.GetDefinitions<FeatureClassDefinition>())
+                                            {
+                                                try
+                                                {
+                                                    var fcName = fcDef.GetName();
+                                                    // Track that this feature class belongs to this feature dataset
+                                                    featureDatasetMap[fcName] = fdName;
+                                                }
+                                                catch { }
+                                            }
+                                        }
+                                    }
+                                    catch { }
                                 }
                                 catch { }
                             }
@@ -447,16 +468,23 @@ namespace ProAppAddInSdeSearch
                                     var geomType = "Unknown";
                                     try { geomType = def.GetShapeType().ToString(); } catch { }
 
+                                    var fcName = def.GetName();
                                     var item = new SdeDatasetItem
                                     {
-                                        Name = def.GetName(),
-                                        SimpleName = GetSimpleName(def.GetName()),
+                                        Name = fcName,
+                                        SimpleName = GetSimpleName(fcName),
                                         DatasetType = "Feature Class",
                                         GeometryType = geomType,
                                         GeometryIconType = MapGeometryIcon(geomType),
                                         CanAddToMap = true,
                                         ConnectionPath = connPath
                                     };
+
+                                    // Check if this feature class belongs to a feature dataset
+                                    if (featureDatasetMap.TryGetValue(fcName, out string fdName))
+                                    {
+                                        item.FeatureDatasetName = fdName;
+                                    }
 
                                     try { item.SpatialReference = def.GetSpatialReference()?.Name; } catch { }
                                     try { item.AliasName = def.GetAliasName(); } catch { }
@@ -1056,7 +1084,20 @@ namespace ProAppAddInSdeSearch
                         // Open the newly created map in a map view
                         _ = FrameworkApplication.Panes.CreateMapPaneAsync(map);
                     }
-                    var uri = new Uri(item.ConnectionPath + "\\" + item.Name);
+                    // Construct the correct path - include feature dataset if present
+                    string path;
+                    if (!string.IsNullOrEmpty(item.FeatureDatasetName))
+                    {
+                        // Feature class inside a feature dataset
+                        path = item.ConnectionPath + "\\" + item.FeatureDatasetName + "\\" + item.Name;
+                    }
+                    else
+                    {
+                        // Standalone feature class or table
+                        path = item.ConnectionPath + "\\" + item.Name;
+                    }
+                    var uri = new Uri(path);
+
                     if (item.DatasetType == "Feature Class")
                         LayerFactory.Instance.CreateLayer(uri, map);
                     else if (item.DatasetType == "Table")
@@ -1334,6 +1375,7 @@ namespace ProAppAddInSdeSearch
         public string GeometryIconType { get; set; }
 
         [JsonIgnore] public string ConnectionPath { get; set; }
+        public string FeatureDatasetName { get; set; }
         public bool CanAddToMap { get; set; }
         public int FieldCount { get; set; }
         public string SpatialReference { get; set; }
