@@ -38,6 +38,7 @@ namespace ProAppAddInSdeSearch
         private ObservableCollection<SdeConnectionItem> _connections = new ObservableCollection<SdeConnectionItem>();
         private SdeConnectionItem _selectedConnection;
         private string _manualSdePath = "";
+        private DateTime? _cacheTimestamp;
 
         // ── Full dataset cache ────────────────────────
         private List<SdeDatasetItem> _allDatasets = new List<SdeDatasetItem>();
@@ -361,21 +362,24 @@ namespace ProAppAddInSdeSearch
             if (!forceRefresh)
             {
                 ReportProgress("Checking cache...");
-                var cached = SdeSearchCache.Load(connPath);
+                var cached = SdeSearchCache.Load(connPath, out DateTime? cachedAt);
                 if (cached != null && cached.Count > 0)
                 {
                     _allDatasets = cached;
+                    _cacheTimestamp = cachedAt;
                     int fcs = cached.Count(d => d.DatasetType == "Feature Class");
                     int tbls = cached.Count(d => d.DatasetType == "Table");
                     int fds = cached.Count(d => d.DatasetType == "Feature Dataset");
                     int rels = cached.Count(d => d.DatasetType == "Relationship Class");
+
+                    string cacheAge = FormatCacheAge(cachedAt);
 
                     RunOnUI(() =>
                     {
                         ApplyFilterAndSearch();
                         IsSearching = false;
                         ProgressText = "";
-                        StatusText = $"{connName} (cached): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
+                        StatusText = $"{connName} (cached {cacheAge}): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
                     });
                     return;
                 }
@@ -541,6 +545,7 @@ namespace ProAppAddInSdeSearch
                         // ── Save cache ───────────────────────────
                         ReportProgress("Saving to cache...");
                         SdeSearchCache.Save(connPath, _allDatasets);
+                        _cacheTimestamp = DateTime.UtcNow;
 
                         int fcs = _allDatasets.Count(d => d.DatasetType == "Feature Class");
                         int tbls = _allDatasets.Count(d => d.DatasetType == "Table");
@@ -552,7 +557,7 @@ namespace ProAppAddInSdeSearch
                             ApplyFilterAndSearch();
                             IsSearching = false;
                             ProgressText = "";
-                            StatusText = $"{connName}: {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
+                            StatusText = $"{connName} (just refreshed): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
                         });
                     }
                 }
@@ -1076,6 +1081,21 @@ namespace ProAppAddInSdeSearch
             return i >= 0 ? n[(i + 1)..] : n;
         }
 
+        private static string FormatCacheAge(DateTime? cachedAt)
+        {
+            if (!cachedAt.HasValue) return "unknown";
+
+            var age = DateTime.UtcNow - cachedAt.Value;
+
+            if (age.TotalMinutes < 1) return "just now";
+            if (age.TotalMinutes < 60) return $"{(int)age.TotalMinutes}m ago";
+            if (age.TotalHours < 24) return $"{(int)age.TotalHours}h ago";
+            if (age.TotalDays < 7) return $"{(int)age.TotalDays}d ago";
+            if (age.TotalDays < 30) return $"{(int)(age.TotalDays / 7)}w ago";
+
+            return cachedAt.Value.ToLocalTime().ToString("MMM d");
+        }
+
         private static string GetFieldTypeIcon(FieldType ft) => ft switch
         {
             FieldType.String => "Abc",
@@ -1170,8 +1190,9 @@ namespace ProAppAddInSdeSearch
             }
         }
 
-        public static List<SdeDatasetItem> Load(string connectionPath)
+        public static List<SdeDatasetItem> Load(string connectionPath, out DateTime? cachedAt)
         {
+            cachedAt = null;
             try
             {
                 var file = GetCacheFile(connectionPath);
@@ -1180,6 +1201,8 @@ namespace ProAppAddInSdeSearch
                 var json = File.ReadAllText(file);
                 var wrapper = JsonSerializer.Deserialize<CacheWrapper>(json);
                 if (wrapper?.Datasets == null) return null;
+
+                cachedAt = wrapper.CachedAt;
 
                 // Restore connection path on each item (not serialized to save space)
                 foreach (var d in wrapper.Datasets)
@@ -1190,6 +1213,23 @@ namespace ProAppAddInSdeSearch
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Cache load error: {ex.Message}");
+                return null;
+            }
+        }
+
+        public static DateTime? GetCachedAt(string connectionPath)
+        {
+            try
+            {
+                var file = GetCacheFile(connectionPath);
+                if (!File.Exists(file)) return null;
+
+                var json = File.ReadAllText(file);
+                var wrapper = JsonSerializer.Deserialize<CacheWrapper>(json);
+                return wrapper?.CachedAt;
+            }
+            catch
+            {
                 return null;
             }
         }
