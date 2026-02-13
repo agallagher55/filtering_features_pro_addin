@@ -1054,7 +1054,7 @@ namespace ProAppAddInSdeSearch
                             return;
                         }
                         // Open the newly created map in a map view
-                        var mapPane = FrameworkApplication.Panes.CreateMapPaneAsync(map, ArcGIS.Desktop.Core.MapViewingMode.Map);
+                        _ = FrameworkApplication.Panes.CreateMapPaneAsync(map);
                     }
                     var uri = new Uri(item.ConnectionPath + "\\" + item.Name);
                     if (item.DatasetType == "Feature Class")
