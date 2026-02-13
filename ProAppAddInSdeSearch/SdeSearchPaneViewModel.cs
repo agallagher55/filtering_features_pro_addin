@@ -1043,7 +1043,19 @@ namespace ProAppAddInSdeSearch
                 try
                 {
                     var map = MapView.Active?.Map;
-                    if (map == null) { ReportStatus("No active map."); return; }
+                    if (map == null)
+                    {
+                        // No active map - create a new one
+                        ReportStatus("No active map found. Creating new map...");
+                        map = MapFactory.Instance.CreateMap(item.SimpleName + " Map", ArcGIS.Core.CIM.MapType.Map, ArcGIS.Core.CIM.MapViewingMode.Map);
+                        if (map == null)
+                        {
+                            ReportStatus("Error: Failed to create new map.");
+                            return;
+                        }
+                        // Open the newly created map in a map view
+                        var mapPane = FrameworkApplication.Panes.CreateMapPaneAsync(map, ArcGIS.Desktop.Core.MapViewingMode.Map);
+                    }
                     var uri = new Uri(item.ConnectionPath + "\\" + item.Name);
                     if (item.DatasetType == "Feature Class")
                         LayerFactory.Instance.CreateLayer(uri, map);
