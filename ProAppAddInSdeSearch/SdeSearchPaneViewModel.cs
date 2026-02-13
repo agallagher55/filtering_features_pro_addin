@@ -910,16 +910,9 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                // Construct the URI for the dataset in the geodatabase
-                // Format: file:///path/to/connection.sde/datasetname
-                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name).Replace('\\', '/');
-                if (!itemPath.StartsWith("file:///"))
-                {
-                    itemPath = "file:///" + itemPath.TrimStart('/');
-                }
-
-                var itemUri = new Uri(itemPath);
-                var catalogItem = ItemFactory.Instance.Create(itemUri);
+                // Construct the path for the dataset in the geodatabase
+                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name);
+                var catalogItem = ItemFactory.Instance.Create(itemPath);
 
                 if (catalogItem != null)
                 {
@@ -942,16 +935,9 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                // Construct the URI for the dataset in the geodatabase
-                // Format: file:///path/to/connection.sde/datasetname
-                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name).Replace('\\', '/');
-                if (!itemPath.StartsWith("file:///"))
-                {
-                    itemPath = "file:///" + itemPath.TrimStart('/');
-                }
-
-                var itemUri = new Uri(itemPath);
-                var catalogItem = ItemFactory.Instance.Create(itemUri);
+                // Construct the path for the dataset in the geodatabase
+                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name);
+                var catalogItem = ItemFactory.Instance.Create(itemPath);
 
                 if (catalogItem != null)
                 {
