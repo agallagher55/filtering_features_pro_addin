@@ -400,7 +400,7 @@ namespace ProAppAddInSdeSearch
                             {
                                 try
                                 {
-                                    _allDatasets.Add(new SdeDatasetItem
+                                    var item = new SdeDatasetItem
                                     {
                                         Name = def.GetName(),
                                         SimpleName = GetSimpleName(def.GetName()),
@@ -408,7 +408,12 @@ namespace ProAppAddInSdeSearch
                                         GeometryIconType = "Dataset",
                                         CanAddToMap = false,
                                         ConnectionPath = connPath
-                                    });
+                                    };
+
+                                    // Load metadata for searching
+                                    TryLoadMetadata(item, def);
+
+                                    _allDatasets.Add(item);
                                     total++;
                                 }
                                 catch { }
@@ -442,6 +447,9 @@ namespace ProAppAddInSdeSearch
 
                                     try { item.SpatialReference = def.GetSpatialReference()?.Name; } catch { }
                                     try { item.AliasName = def.GetAliasName(); } catch { }
+
+                                    // Load metadata for searching
+                                    TryLoadMetadata(item, def);
 
                                     _allDatasets.Add(item);
                                     total++; fc++;
@@ -478,6 +486,9 @@ namespace ProAppAddInSdeSearch
                                         ConnectionPath = connPath
                                     };
                                     try { item.AliasName = def.GetAliasName(); } catch { }
+
+                                    // Load metadata for searching
+                                    TryLoadMetadata(item, def);
 
                                     _allDatasets.Add(item);
                                     total++; tc++;
@@ -899,34 +910,64 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                // TODO: GetDescription() doesn't exist on TableDefinition.
-                // Need to use Item.GetXml() instead - requires getting the Item from catalog.
-                // See: https://pro.arcgis.com/en/pro-app/latest/sdk/api-reference/topic17180.html
-                // Temporarily disabled to fix build error.
-                // string xml = definition.GetDescription();
-                // if (string.IsNullOrEmpty(xml)) return;
-                // item.HasMetadata = true;
-                // item.RawMetadataXml = xml;
-                // ParseMetadataXml(item, xml);
+                // Construct the URI for the dataset in the geodatabase
+                // Format: file:///path/to/connection.sde/datasetname
+                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name).Replace('\\', '/');
+                if (!itemPath.StartsWith("file:///"))
+                {
+                    itemPath = "file:///" + itemPath.TrimStart('/');
+                }
+
+                var itemUri = new Uri(itemPath);
+                var catalogItem = ItemFactory.Instance.Create(itemUri);
+
+                if (catalogItem != null)
+                {
+                    string xml = catalogItem.GetXml();
+                    if (!string.IsNullOrEmpty(xml))
+                    {
+                        item.HasMetadata = true;
+                        item.RawMetadataXml = xml;
+                        ParseMetadataXml(item, xml);
+                    }
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Metadata load error for {item.Name}: {ex.Message}");
+            }
         }
 
         private void TryLoadMetadata(SdeDatasetItem item, FeatureDatasetDefinition definition)
         {
             try
             {
-                // TODO: GetDescription() doesn't exist on FeatureDatasetDefinition.
-                // Need to use Item.GetXml() instead - requires getting the Item from catalog.
-                // See: https://pro.arcgis.com/en/pro-app/latest/sdk/api-reference/topic17180.html
-                // Temporarily disabled to fix build error.
-                // string xml = definition.GetDescription();
-                // if (string.IsNullOrEmpty(xml)) return;
-                // item.HasMetadata = true;
-                // item.RawMetadataXml = xml;
-                // ParseMetadataXml(item, xml);
+                // Construct the URI for the dataset in the geodatabase
+                // Format: file:///path/to/connection.sde/datasetname
+                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name).Replace('\\', '/');
+                if (!itemPath.StartsWith("file:///"))
+                {
+                    itemPath = "file:///" + itemPath.TrimStart('/');
+                }
+
+                var itemUri = new Uri(itemPath);
+                var catalogItem = ItemFactory.Instance.Create(itemUri);
+
+                if (catalogItem != null)
+                {
+                    string xml = catalogItem.GetXml();
+                    if (!string.IsNullOrEmpty(xml))
+                    {
+                        item.HasMetadata = true;
+                        item.RawMetadataXml = xml;
+                        ParseMetadataXml(item, xml);
+                    }
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Metadata load error for {item.Name}: {ex.Message}");
+            }
         }
 
         private void ParseMetadataXml(SdeDatasetItem item, string xml)
