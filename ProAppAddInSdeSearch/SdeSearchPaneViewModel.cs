@@ -362,7 +362,7 @@ namespace ProAppAddInSdeSearch
             if (!forceRefresh)
             {
                 ReportProgress("Checking cache...");
-                var cached = SdeSearchCache.Load(connPath, out DateTime? cachedAt);
+                var cached = SdeSearchCache.Load(connPath, out DateTime? cachedAt, out bool usedSeedCache);
                 if (cached != null && cached.Count > 0)
                 {
                     _allDatasets = cached;
@@ -372,14 +372,23 @@ namespace ProAppAddInSdeSearch
                     int fds = cached.Count(d => d.DatasetType == "Feature Dataset");
                     int rels = cached.Count(d => d.DatasetType == "Relationship Class");
 
-                    string cacheAge = FormatCacheAge(cachedAt);
+                    string cacheInfo;
+                    if (usedSeedCache)
+                    {
+                        cacheInfo = "template data - click ↻ to refresh from your database";
+                    }
+                    else
+                    {
+                        string cacheAge = FormatCacheAge(cachedAt);
+                        cacheInfo = $"cached {cacheAge}";
+                    }
 
                     RunOnUI(() =>
                     {
                         ApplyFilterAndSearch();
                         IsSearching = false;
                         ProgressText = "";
-                        StatusText = $"{connName} (cached {cacheAge}): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
+                        StatusText = $"{connName} ({cacheInfo}): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
                     });
                     return;
                 }
@@ -1163,6 +1172,21 @@ namespace ProAppAddInSdeSearch
             return dir;
         }
 
+        private static string GetSeedCacheFile()
+        {
+            // Look for seed cache in the add-in installation directory
+            try
+            {
+                var assemblyPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                var addInDir = Path.GetDirectoryName(assemblyPath);
+                return Path.Combine(addInDir, "SeedCache.json");
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
         private static string GetCacheFile(string connectionPath)
         {
             // Hash the connection path to create a stable filename
@@ -1190,13 +1214,39 @@ namespace ProAppAddInSdeSearch
             }
         }
 
-        public static List<SdeDatasetItem> Load(string connectionPath, out DateTime? cachedAt)
+        public static List<SdeDatasetItem> Load(string connectionPath, out DateTime? cachedAt, out bool usedSeedCache)
         {
             cachedAt = null;
+            usedSeedCache = false;
+
             try
             {
                 var file = GetCacheFile(connectionPath);
-                if (!File.Exists(file)) return null;
+
+                // If user cache doesn't exist, check for seed cache
+                if (!File.Exists(file))
+                {
+                    var seedFile = GetSeedCacheFile();
+                    if (!string.IsNullOrEmpty(seedFile) && File.Exists(seedFile))
+                    {
+                        // Copy seed cache to user cache location for this connection
+                        try
+                        {
+                            File.Copy(seedFile, file, overwrite: false);
+                            usedSeedCache = true;
+                            System.Diagnostics.Debug.WriteLine($"Initialized cache from seed file for {connectionPath}");
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.WriteLine($"Seed cache copy error: {ex.Message}");
+                            return null;
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
 
                 var json = File.ReadAllText(file);
                 var wrapper = JsonSerializer.Deserialize<CacheWrapper>(json);
