@@ -1,6 +1,7 @@
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -241,29 +242,36 @@ namespace ProAppAddInSdeSearch
                 try
                 {
                     var items = new List<SdeConnectionItem>();
+                    var project = Project.Current;
 
-                    ReportProgress("Scanning project connections...");
-                    foreach (var pi in Project.Current.GetItems<GDBProjectItem>())
+                    if (project != null)
                     {
-                        try
+                        ReportProgress("Scanning project connections...");
+                        foreach (var pi in project.GetItems<GDBProjectItem>())
                         {
-                            var p = pi.Path;
-                            if (!string.IsNullOrEmpty(p) &&
-                                (p.EndsWith(".sde", StringComparison.OrdinalIgnoreCase) ||
-                                 p.Contains("DatabaseConnections", StringComparison.OrdinalIgnoreCase)))
+                            try
                             {
-                                items.Add(new SdeConnectionItem { Name = pi.Name, Path = p, ConnectionType = "Project" });
+                                var p = pi.Path;
+                                if (!string.IsNullOrEmpty(p) &&
+                                    (p.EndsWith(".sde", StringComparison.OrdinalIgnoreCase) ||
+                                     p.Contains("DatabaseConnections", StringComparison.OrdinalIgnoreCase)))
+                                {
+                                    items.Add(new SdeConnectionItem { Name = pi.Name, Path = p, ConnectionType = "Project" });
+                                }
                             }
+                            catch { }
                         }
-                        catch { }
+
+                        ScanFolder(items, Path.Combine(project.HomeFolderPath, "DatabaseConnections"), "Project Folder");
                     }
 
-                    ScanFolder(items, Path.Combine(Project.Current.HomeFolderPath, "DatabaseConnections"), "Project Folder");
                     ScanFolder(items, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                         "Esri", "ArcGISPro", "DatabaseConnections"), "ArcGIS Pro");
 
                     RunOnUI(() =>
                     {
+                        var previousPath = _selectedConnection?.Path;
+
                         var manual = Connections.Where(c => c.ConnectionType == "Manual").ToList();
                         Connections.Clear();
                         foreach (var c in items.OrderBy(c => c.Name)) Connections.Add(c);
@@ -275,7 +283,17 @@ namespace ProAppAddInSdeSearch
                             ? $"{Connections.Count} connection(s) found — select one to browse"
                             : "No connections found. Browse for an .sde file below.";
                         ProgressText = "";
-                        if (Connections.Count == 1) SelectedConnection = Connections.First();
+
+                        // Restore previous selection, or auto-select if only one connection
+                        if (previousPath != null)
+                        {
+                            var match = Connections.FirstOrDefault(c => c.Path.Equals(previousPath, StringComparison.OrdinalIgnoreCase));
+                            if (match != null) SelectedConnection = match;
+                        }
+                        else if (Connections.Count == 1)
+                        {
+                            SelectedConnection = Connections.First();
+                        }
                     });
                 }
                 catch (Exception ex) { ReportStatus($"Error: {ex.Message}"); }
@@ -1198,8 +1216,21 @@ namespace ProAppAddInSdeSearch
         protected override async Task InitializeAsync()
         {
             LoadThemePreference();
+
+            // Re-load connections when a project is opened, since the DockPane may
+            // initialize before the project is fully loaded (e.g. restored from a
+            // previous session), causing Project.Current to be null or its items
+            // to be unavailable during the initial LoadConnections() call.
+            ProjectOpenedAsyncEvent.Subscribe(OnProjectOpened);
+
             await LoadConnections();
             await base.InitializeAsync();
+        }
+
+        private Task OnProjectOpened(ProjectEventArgs args)
+        {
+            _ = LoadConnections();
+            return Task.CompletedTask;
         }
 
         internal static void Show()
