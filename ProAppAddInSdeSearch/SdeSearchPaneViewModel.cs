@@ -449,25 +449,22 @@ namespace ProAppAddInSdeSearch
                                     _allDatasets.Add(item);
                                     total++;
 
-                                    // Enumerate feature classes within this feature dataset
+                                    // Enumerate datasets within this feature dataset
                                     try
                                     {
-                                        using (var fd = gdb.OpenDataset<FeatureDataset>(fdName))
+                                        var relatedDefs = gdb.GetRelatedDefinitions(def, DefinitionRelationshipType.DatasetInFeatureDataset);
+                                        foreach (var relDef in relatedDefs)
                                         {
-                                            foreach (var fcDef in fd.GetDefinitions<FeatureClassDefinition>())
+                                            try
                                             {
-                                                try
-                                                {
-                                                    var fcName = fcDef.GetName();
-                                                    // Track that this feature class belongs to this feature dataset
-                                                    // Store by both full name and simple name to handle naming mismatches
-                                                    featureDatasetMap[fcName] = fdName;
-                                                    var simpleFc = GetSimpleName(fcName);
-                                                    if (!string.Equals(simpleFc, fcName, StringComparison.OrdinalIgnoreCase))
-                                                        featureDatasetMap[simpleFc] = fdName;
-                                                }
-                                                catch { }
+                                                var childName = relDef.GetName();
+                                                // Store by both full name and simple name to handle naming mismatches
+                                                featureDatasetMap[childName] = fdName;
+                                                var simpleChild = GetSimpleName(childName);
+                                                if (!string.Equals(simpleChild, childName, StringComparison.OrdinalIgnoreCase))
+                                                    featureDatasetMap[simpleChild] = fdName;
                                             }
+                                            catch { }
                                         }
                                     }
                                     catch { }
@@ -1298,6 +1295,7 @@ namespace ProAppAddInSdeSearch
             {
                 var wrapper = new CacheWrapper
                 {
+                    CacheVersion = CurrentCacheVersion,
                     ConnectionPath = connectionPath,
                     CachedAt = DateTime.UtcNow,
                     Datasets = items
@@ -1349,6 +1347,13 @@ namespace ProAppAddInSdeSearch
                 var wrapper = JsonSerializer.Deserialize<CacheWrapper>(json);
                 if (wrapper?.Datasets == null) return null;
 
+                // Reject stale cache from older versions (e.g. missing FeatureDatasetName)
+                if (wrapper.CacheVersion < CurrentCacheVersion)
+                {
+                    try { File.Delete(file); } catch { }
+                    return null;
+                }
+
                 cachedAt = wrapper.CachedAt;
 
                 // Restore connection path on each item (not serialized to save space)
@@ -1381,8 +1386,12 @@ namespace ProAppAddInSdeSearch
             }
         }
 
+        // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
+        private const int CurrentCacheVersion = 2;
+
         private class CacheWrapper
         {
+            public int CacheVersion { get; set; }
             public string ConnectionPath { get; set; }
             public DateTime CachedAt { get; set; }
             public List<SdeDatasetItem> Datasets { get; set; }
