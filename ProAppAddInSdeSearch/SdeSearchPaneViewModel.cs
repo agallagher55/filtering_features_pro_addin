@@ -460,7 +460,11 @@ namespace ProAppAddInSdeSearch
                                                 {
                                                     var fcName = fcDef.GetName();
                                                     // Track that this feature class belongs to this feature dataset
+                                                    // Store by both full name and simple name to handle naming mismatches
                                                     featureDatasetMap[fcName] = fdName;
+                                                    var simpleFc = GetSimpleName(fcName);
+                                                    if (!string.Equals(simpleFc, fcName, StringComparison.OrdinalIgnoreCase))
+                                                        featureDatasetMap[simpleFc] = fdName;
                                                 }
                                                 catch { }
                                             }
@@ -499,7 +503,9 @@ namespace ProAppAddInSdeSearch
                                     };
 
                                     // Check if this feature class belongs to a feature dataset
-                                    if (featureDatasetMap.TryGetValue(fcName, out string fdName))
+                                    // Try full name first, then simple name as fallback for naming mismatches
+                                    if (featureDatasetMap.TryGetValue(fcName, out string fdName) ||
+                                        featureDatasetMap.TryGetValue(GetSimpleName(fcName), out fdName))
                                     {
                                         item.FeatureDatasetName = fdName;
                                     }
@@ -971,7 +977,10 @@ namespace ProAppAddInSdeSearch
             try
             {
                 // Construct the path for the dataset in the geodatabase
-                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name);
+                // Include feature dataset name in path if present
+                string itemPath = !string.IsNullOrEmpty(item.FeatureDatasetName)
+                    ? System.IO.Path.Combine(item.ConnectionPath, item.FeatureDatasetName, item.Name)
+                    : System.IO.Path.Combine(item.ConnectionPath, item.Name);
                 var catalogItem = ItemFactory.Instance.Create(itemPath);
 
                 if (catalogItem != null)
@@ -1129,7 +1138,11 @@ namespace ProAppAddInSdeSearch
         private void CopySelectedPath()
         {
             if (SelectedResult == null) return;
-            try { System.Windows.Clipboard.SetText($"{SelectedResult.ConnectionPath}\\{SelectedResult.Name}"); StatusText = "Copied path to clipboard"; }
+            try {
+                var copyPath = !string.IsNullOrEmpty(SelectedResult.FeatureDatasetName)
+                    ? $"{SelectedResult.ConnectionPath}\\{SelectedResult.FeatureDatasetName}\\{SelectedResult.Name}"
+                    : $"{SelectedResult.ConnectionPath}\\{SelectedResult.Name}";
+                System.Windows.Clipboard.SetText(copyPath); StatusText = "Copied path to clipboard"; }
             catch (Exception ex) { StatusText = $"Copy error: {ex.Message}"; }
         }
 
