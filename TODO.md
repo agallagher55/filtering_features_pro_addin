@@ -44,3 +44,13 @@ The current design layout could be more space-efficient.
 
 - [ ] Audit current spacing, padding, and margins
 - [ ] Compact the layout where possible while maintaining usability
+
+## Expand search and filtering capabilities
+
+Add more granular search options to help users find exactly what they need.
+
+- [ ] Search by tags only
+- [ ] Search by field name
+- [ ] Search by field value
+- [ ] Search all features created within a date range
+- [ ] Search feature classes for data created within date range
