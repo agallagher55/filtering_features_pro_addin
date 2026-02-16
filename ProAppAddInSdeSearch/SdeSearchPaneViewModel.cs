@@ -1298,6 +1298,7 @@ namespace ProAppAddInSdeSearch
             {
                 var wrapper = new CacheWrapper
                 {
+                    CacheVersion = CurrentCacheVersion,
                     ConnectionPath = connectionPath,
                     CachedAt = DateTime.UtcNow,
                     Datasets = items
@@ -1349,6 +1350,13 @@ namespace ProAppAddInSdeSearch
                 var wrapper = JsonSerializer.Deserialize<CacheWrapper>(json);
                 if (wrapper?.Datasets == null) return null;
 
+                // Reject stale cache from older versions (e.g. missing FeatureDatasetName)
+                if (wrapper.CacheVersion < CurrentCacheVersion)
+                {
+                    try { File.Delete(file); } catch { }
+                    return null;
+                }
+
                 cachedAt = wrapper.CachedAt;
 
                 // Restore connection path on each item (not serialized to save space)
@@ -1381,8 +1389,12 @@ namespace ProAppAddInSdeSearch
             }
         }
 
+        // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
+        private const int CurrentCacheVersion = 2;
+
         private class CacheWrapper
         {
+            public int CacheVersion { get; set; }
             public string ConnectionPath { get; set; }
             public DateTime CachedAt { get; set; }
             public List<SdeDatasetItem> Datasets { get; set; }
