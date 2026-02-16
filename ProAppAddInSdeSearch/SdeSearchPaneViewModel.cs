@@ -1460,11 +1460,24 @@ namespace ProAppAddInSdeSearch
                 var p = new List<string> { DatasetType };
                 if (!string.IsNullOrWhiteSpace(GeometryType)) p.Add(GeometryType);
                 if (FieldCount > 0) p.Add($"{FieldCount} fields");
-                var flags = new List<string>();
-                if (HasEditorTracking) flags.Add("ET");
-                if (IsArchived) flags.Add("Arch");
-                if (flags.Count > 0) p.Add(string.Join("/", flags));
                 return string.Join(" · ", p);
+            }
+        }
+
+        [JsonIgnore]
+        public bool HasFlags => HasEditorTracking || IsArchived;
+
+        [JsonIgnore]
+        public bool HasBadges => HasFlags || !string.IsNullOrEmpty(FeatureDatasetName);
+
+        [JsonIgnore]
+        public string FeatureDatasetSimpleName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(FeatureDatasetName)) return null;
+                var i = FeatureDatasetName.LastIndexOf('.');
+                return i >= 0 ? FeatureDatasetName[(i + 1)..] : FeatureDatasetName;
             }
         }
 

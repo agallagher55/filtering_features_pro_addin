@@ -280,7 +280,7 @@
                 <ItemsControl ItemsSource="{Binding SearchResults}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Padding="10,8" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                            <Border Padding="10,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                                     Cursor="Hand" MouseLeftButtonUp="ResultItem_Click">
                                 <Border.Style>
                                     <Style TargetType="Border">
@@ -303,33 +303,57 @@
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
-                                    
+
                                     <!-- Geometry vector icon -->
-                                    <Viewbox Grid.Column="0" Grid.RowSpan="3" Width="22" Height="22" Margin="0,0,10,0" VerticalAlignment="Center">
+                                    <Viewbox Grid.Column="0" Grid.RowSpan="3" Width="20" Height="20" Margin="0,0,8,0" VerticalAlignment="Center">
                                         <Path Data="{Binding GeometryIconType, Converter={StaticResource GeomPathConv}}"
                                               Fill="{Binding GeometryIconType, Converter={StaticResource GeomColorConv}}"
                                               Stretch="Uniform" Width="20" Height="20"/>
                                     </Viewbox>
-                                    
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding SimpleName}" 
-                                               Foreground="{DynamicResource PrimaryText}" FontSize="13" FontWeight="SemiBold"
+
+                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding SimpleName}"
+                                               Foreground="{DynamicResource PrimaryText}" FontSize="12" FontWeight="SemiBold"
                                                TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
-                                    
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Subtitle}" 
-                                               Foreground="{DynamicResource SecondaryText}" FontSize="11" Margin="0,2,0,0"
+
+                                    <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding Subtitle}"
+                                               Foreground="{DynamicResource SecondaryText}" FontSize="10" Margin="0,1,0,0"
                                                TextTrimming="CharacterEllipsis"/>
-                                    
-                                    <TextBlock Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2"
-                                               Text="{Binding MetadataSnippet}" Foreground="{DynamicResource AccentLight}"
-                                               FontSize="10" Margin="0,4,0,0" TextWrapping="Wrap" MaxHeight="36"
-                                               Visibility="{Binding MetadataSnippet, Converter={StaticResource NonEmptyToVis}}"/>
-                                    
+
+                                    <!-- Badges row: Feature dataset + flags -->
+                                    <WrapPanel Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,3,0,0"
+                                               Visibility="{Binding HasBadges, Converter={StaticResource BoolToVis}}">
+                                        <!-- Feature Dataset badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
+                                                Background="#33FFC107"
+                                                Visibility="{Binding FeatureDatasetSimpleName, Converter={StaticResource NonEmptyToVis}}">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="&#xD83D;&#xDCC2;" FontSize="9" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                                <TextBlock Text="{Binding FeatureDatasetSimpleName}" FontSize="9" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Border>
+                                        <!-- Editor Tracking badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
+                                                Background="#332196F3"
+                                                Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Editor Tracking" FontSize="9"
+                                                       Foreground="#64B5F6" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <!-- Archiving badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
+                                                Background="#33AB47BC"
+                                                Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Archiving" FontSize="9"
+                                                       Foreground="#CE93D8" VerticalAlignment="Center"/>
+                                        </Border>
+                                    </WrapPanel>
+
                                     <Button Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
                                             Visibility="{Binding CanAddToMap, Converter={StaticResource BoolToVis}}"
-                                            ToolTip="Add to active map" Padding="6,4" Margin="6,0,0,0"
+                                            ToolTip="Add to active map" Padding="4,3" Margin="6,0,0,0"
                                             VerticalAlignment="Center" Click="AddToMapButton_Click"
                                             Style="{StaticResource AddMapBtn}">
-                                        <TextBlock Text="＋" FontSize="16" Foreground="{DynamicResource Accent}"/>
+                                        <TextBlock Text="＋" FontSize="14" Foreground="{DynamicResource Accent}"/>
                                     </Button>
                                 </Grid>
                             </Border>
