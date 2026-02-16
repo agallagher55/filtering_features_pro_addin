@@ -1195,11 +1195,11 @@ namespace ProAppAddInSdeSearch
 
         #region Lifecycle
 
-        protected override Task InitializeAsync()
+        protected override async Task InitializeAsync()
         {
             LoadThemePreference();
-            _ = LoadConnections();
-            return base.InitializeAsync();
+            await LoadConnections();
+            await base.InitializeAsync();
         }
 
         internal static void Show()
