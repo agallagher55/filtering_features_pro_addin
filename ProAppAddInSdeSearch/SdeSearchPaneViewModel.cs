@@ -449,25 +449,22 @@ namespace ProAppAddInSdeSearch
                                     _allDatasets.Add(item);
                                     total++;
 
-                                    // Enumerate feature classes within this feature dataset
+                                    // Enumerate datasets within this feature dataset
                                     try
                                     {
-                                        using (var fd = gdb.OpenDataset<FeatureDataset>(fdName))
+                                        var relatedDefs = gdb.GetRelatedDefinitions(def, DefinitionRelationshipType.DatasetInFeatureDataset);
+                                        foreach (var relDef in relatedDefs)
                                         {
-                                            foreach (var fcDef in fd.GetDefinitions<FeatureClassDefinition>())
+                                            try
                                             {
-                                                try
-                                                {
-                                                    var fcName = fcDef.GetName();
-                                                    // Track that this feature class belongs to this feature dataset
-                                                    // Store by both full name and simple name to handle naming mismatches
-                                                    featureDatasetMap[fcName] = fdName;
-                                                    var simpleFc = GetSimpleName(fcName);
-                                                    if (!string.Equals(simpleFc, fcName, StringComparison.OrdinalIgnoreCase))
-                                                        featureDatasetMap[simpleFc] = fdName;
-                                                }
-                                                catch { }
+                                                var childName = relDef.GetName();
+                                                // Store by both full name and simple name to handle naming mismatches
+                                                featureDatasetMap[childName] = fdName;
+                                                var simpleChild = GetSimpleName(childName);
+                                                if (!string.Equals(simpleChild, childName, StringComparison.OrdinalIgnoreCase))
+                                                    featureDatasetMap[simpleChild] = fdName;
                                             }
+                                            catch { }
                                         }
                                     }
                                     catch { }
