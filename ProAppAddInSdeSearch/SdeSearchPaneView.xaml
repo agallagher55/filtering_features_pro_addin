@@ -313,9 +313,29 @@
                                               Stretch="Uniform" Width="20" Height="20"/>
                                     </Viewbox>
 
-                                    <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding SimpleName}"
-                                               Foreground="{DynamicResource PrimaryText}" FontSize="12" FontWeight="SemiBold"
-                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                    <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal">
+                                        <TextBlock Text="{Binding SimpleName}"
+                                                   Foreground="{DynamicResource PrimaryText}" FontSize="12" FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
+                                        <!-- Editor Tracking indicator -->
+                                        <Border CornerRadius="2" Padding="3,0" Margin="5,0,0,0" VerticalAlignment="Center"
+                                                Background="#332196F3" ToolTip="Editor Tracking enabled"
+                                                Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}">
+                                            <Viewbox Width="11" Height="11">
+                                                <Path Data="M3,17.25 L3,21 L6.75,21 L17.81,9.94 L14.06,6.19 L3,17.25 Z M20.71,7.04 C21.1,6.65 21.1,6.02 20.71,5.63 L18.37,3.29 C17.98,2.9 17.35,2.9 16.96,3.29 L15.13,5.12 L18.88,8.87 L20.71,7.04 Z"
+                                                      Fill="#64B5F6" Stretch="Uniform"/>
+                                            </Viewbox>
+                                        </Border>
+                                        <!-- Archiving indicator -->
+                                        <Border CornerRadius="2" Padding="3,0" Margin="3,0,0,0" VerticalAlignment="Center"
+                                                Background="#33AB47BC" ToolTip="Archiving enabled"
+                                                Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}">
+                                            <Viewbox Width="11" Height="11">
+                                                <Path Data="M20.54,5.23 L19.15,3.55 C18.88,3.21 18.47,3 18,3 L6,3 C5.53,3 5.12,3.21 4.84,3.55 L3.46,5.23 C3.17,5.57 3,6.02 3,6.5 L3,19 C3,20.1 3.9,21 5,21 L19,21 C20.1,21 21,20.1 21,19 L21,6.5 C21,6.02 20.83,5.57 20.54,5.23 Z M12,17.5 L6.5,12 L10,12 L10,10 L14,10 L14,12 L17.5,12 L12,17.5 Z M5.12,5 L5.93,4 L17.94,4 L18.87,5 L5.12,5 Z"
+                                                      Fill="#CE93D8" Stretch="Uniform"/>
+                                            </Viewbox>
+                                        </Border>
+                                    </StackPanel>
 
                                     <DockPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,1,0,0">
                                         <TextBlock DockPanel.Dock="Right" Text="{Binding CreatedDateDisplay}" FontSize="9"
