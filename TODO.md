@@ -1,5 +1,8 @@
 # TODO
 
+## Export results
+## Automatically detect light/dark theme
+
 ## Show created/modified dates in the results list (partially done)
 
 Dates are already parsed from metadata XML (`CreaDate`, `ModDate`) and displayed in the
