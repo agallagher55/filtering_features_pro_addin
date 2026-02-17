@@ -94,6 +94,11 @@
       <CopyLocal>False</CopyLocal>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Charts.Wpf">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Charts.Wpf.dll</HintPath>
+      <CopyLocal>False</CopyLocal>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="ESRI.ArcGIS.ItemIndex">
       <HintPath>C:\Program Files\ArcGIS\Pro\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
       <CopyLocal>False</CopyLocal>
