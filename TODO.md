@@ -11,25 +11,25 @@ see at a glance when a dataset was created and last modified without opening det
 - [ ] Handle missing dates gracefully (hide label when null)
 - [ ] Consider a relative format for recent dates ("2 days ago") and absolute for older ones
 
-## Make feature dataset membership more obvious
+## ~~Make feature dataset membership more obvious~~ ✅
 
-`FeatureDatasetName` is tracked internally and used for path construction, but it is
+~~`FeatureDatasetName` is tracked internally and used for path construction, but it is
 **not surfaced in the results list UI**. Users can't tell whether an item belongs to a
-feature dataset without opening the detail view.
+feature dataset without opening the detail view.~~
 
-- [ ] Display the parent feature dataset name in the result list item (e.g. a row or badge below the subtitle)
-- [ ] Visually distinguish items inside a feature dataset from standalone items (indent, icon, color tag, etc.)
+- [x] Display the parent feature dataset name in the result list item (e.g. a row or badge below the subtitle)
+- [x] Visually distinguish items inside a feature dataset from standalone items (indent, icon, color tag, etc.)
 - [ ] Consider grouping results by feature dataset when the "Feature Datasets" filter is active
 
-## Make flags (Editor Tracking / Archiving) more visible
+## ~~Make flags (Editor Tracking / Archiving) more visible~~ ✅
 
-Flags currently display as abbreviated text ("ET", "Arch") appended to the end of the
-subtitle line, which is easy to miss.
+~~Flags currently display as abbreviated text ("ET", "Arch") appended to the end of the
+subtitle line, which is easy to miss.~~
 
-- [ ] Replace abbreviations with small visual badges or colored tags (e.g. pill-shaped labels)
-- [ ] Use distinct colors or icons for each flag type
-- [ ] Show flags on their own row or as a `WrapPanel` of badges beneath the subtitle instead of inline text
-- [ ] Keep the full descriptions ("Editor Tracking", "Archiving") — avoid abbreviations
+- [x] Replace abbreviations with small visual badges or colored tags (e.g. pill-shaped labels)
+- [x] Use distinct colors or icons for each flag type
+- [x] Show flags on their own row or as a `WrapPanel` of badges beneath the subtitle instead of inline text
+- [x] Keep the full descriptions ("Editor Tracking", "Archiving") — avoid abbreviations
 
 ## Improve seedCache.json creation with progress indicator
 
@@ -38,12 +38,12 @@ Creating the seedCache.json file takes a long time to index. Users need visibili
 - [ ] Add a progress indicator or metric to show seedCache.json creation status
 - [ ] Investigate faster indexing methods or optimizations
 
-## Make design more compact
+## Make design more compact (partially done)
 
 The current design layout could be more space-efficient.
 
-- [ ] Audit current spacing, padding, and margins
-- [ ] Compact the layout where possible while maintaining usability
+- [x] Compact the result list items (reduced padding, font sizes, icon sizes; removed metadata snippet preview)
+- [ ] Audit remaining spacing, padding, and margins across other UI sections
 
 ## Expand search and filtering capabilities
 
