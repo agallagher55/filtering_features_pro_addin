@@ -521,6 +521,8 @@ namespace ProAppAddInSdeSearch
                                     // Load metadata for searching
                                     TryLoadMetadata(item, def);
                                     DetectDates(item);
+                                    DetectEditorTracking(item, def);
+                                    DetectArchiving(item, def, gdb);
 
                                     _allDatasets.Add(item);
                                     total++; fc++;
@@ -561,6 +563,8 @@ namespace ProAppAddInSdeSearch
                                     // Load metadata for searching
                                     TryLoadMetadata(item, def);
                                     DetectDates(item);
+                                    DetectEditorTracking(item, def);
+                                    DetectArchiving(item, def, gdb);
 
                                     _allDatasets.Add(item);
                                     total++; tc++;
