@@ -1257,9 +1257,41 @@ namespace ProAppAddInSdeSearch
             {
                 var file = Path.Combine(SdeSearchCache.GetCacheDir(), "theme.txt");
                 if (File.Exists(file))
+                {
                     IsDarkMode = File.ReadAllText(file).Trim().Equals("dark", StringComparison.OrdinalIgnoreCase);
+                    return;
+                }
             }
             catch { }
+
+            // No saved preference — auto-detect from ArcGIS Pro / Windows
+            IsDarkMode = DetectSystemDarkMode();
+        }
+
+        private static bool DetectSystemDarkMode()
+        {
+            // 1. Try ArcGIS Pro's application theme
+            try
+            {
+                var theme = FrameworkApplication.ApplicationTheme;
+                return theme == ApplicationTheme.Dark || theme == ApplicationTheme.HighContrast;
+            }
+            catch { }
+
+            // 2. Fallback: read the Windows "AppsUseLightTheme" registry value
+            try
+            {
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+                if (key != null)
+                {
+                    var val = key.GetValue("AppsUseLightTheme");
+                    if (val is int i) return i == 0; // 0 = dark, 1 = light
+                }
+            }
+            catch { }
+
+            return true; // default to dark if detection fails
         }
 
         #endregion
