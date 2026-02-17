@@ -27,6 +27,7 @@ namespace ProAppAddInSdeSearch
         private string _searchText = "";
         private bool _searchByName = true;
         private bool _searchByMetadata = false;
+        private bool _searchByTags = false;
         private bool _isSearching;
         private string _statusText = "Select a connection to browse SDE items";
         private string _progressText = "";
@@ -119,6 +120,12 @@ namespace ProAppAddInSdeSearch
         {
             get => _searchByMetadata;
             set { if (SetProperty(ref _searchByMetadata, value)) ApplyFilterAndSearch(); }
+        }
+
+        public bool SearchByTags
+        {
+            get => _searchByTags;
+            set { if (SetProperty(ref _searchByTags, value)) ApplyFilterAndSearch(); }
         }
 
         public bool IsSearching
@@ -445,6 +452,7 @@ namespace ProAppAddInSdeSearch
 
                                     // Load metadata for searching
                                     TryLoadMetadata(item, def);
+                                    DetectDates(item);
 
                                     _allDatasets.Add(item);
                                     total++;
@@ -512,6 +520,7 @@ namespace ProAppAddInSdeSearch
 
                                     // Load metadata for searching
                                     TryLoadMetadata(item, def);
+                                    DetectDates(item);
 
                                     _allDatasets.Add(item);
                                     total++; fc++;
@@ -551,6 +560,7 @@ namespace ProAppAddInSdeSearch
 
                                     // Load metadata for searching
                                     TryLoadMetadata(item, def);
+                                    DetectDates(item);
 
                                     _allDatasets.Add(item);
                                     total++; tc++;
@@ -691,6 +701,10 @@ namespace ProAppAddInSdeSearch
                               Contains(item.Tags, term) || Contains(item.Purpose, term) ||
                               Contains(item.Credits, term) || Contains(item.MetadataSnippet, term) ||
                               Contains(item.DatasetType, term);
+                }
+                if (!matched && SearchByTags)
+                {
+                    matched = Contains(item.Tags, term);
                 }
                 if (!matched) return false;
             }
@@ -1480,6 +1494,23 @@ namespace ProAppAddInSdeSearch
                 return i >= 0 ? FeatureDatasetName[(i + 1)..] : FeatureDatasetName;
             }
         }
+
+        [JsonIgnore]
+        public string CreatedDateDisplay
+        {
+            get
+            {
+                if (!CreatedDate.HasValue) return null;
+                var age = DateTime.UtcNow - CreatedDate.Value;
+                if (age.TotalDays < 1) return "Created today";
+                if (age.TotalDays < 2) return "Created yesterday";
+                if (age.TotalDays < 30) return $"Created {(int)age.TotalDays}d ago";
+                return $"Created {CreatedDate.Value:yyyy-MM-dd}";
+            }
+        }
+
+        [JsonIgnore]
+        public bool HasCreatedDate => CreatedDate.HasValue;
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
