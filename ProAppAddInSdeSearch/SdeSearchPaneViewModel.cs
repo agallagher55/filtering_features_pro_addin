@@ -667,6 +667,9 @@ namespace ProAppAddInSdeSearch
 
         private void ApplyFilterAndSearch()
         {
+            // Auto-exit detail view so the user sees updated results immediately
+            if (ShowDetails) ShowDetails = false;
+
             string term = (SearchText ?? "").Trim();
             bool wildcard = string.IsNullOrEmpty(term);
 
