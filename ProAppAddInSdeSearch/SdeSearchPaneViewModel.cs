@@ -836,15 +836,14 @@ namespace ProAppAddInSdeSearch
                                             {
                                                 fi.DomainType = "Coded Value";
                                                 var pairs = cvd.GetCodedValuePairs();
-                                                fi.DomainInfo = string.Join(", ",
-                                                    pairs.Take(5).Select(kv => $"{kv.Key}={kv.Value}"));
-                                                if (pairs.Count > 5)
-                                                    fi.DomainInfo += $" (+{pairs.Count - 5} more)";
+                                                fi.DomainInfo = $"Coded Value ({pairs.Count} values)";
+                                                foreach (var kv in pairs)
+                                                    fi.DomainValues.Add(new DomainCodeValue { Code = kv.Key?.ToString() ?? "", Value = kv.Value?.ToString() ?? "" });
                                             }
                                             else if (domain is RangeDomain rd)
                                             {
                                                 fi.DomainType = "Range";
-                                                fi.DomainInfo = $"{rd.GetMinValue()} – {rd.GetMaxValue()}";
+                                                fi.DomainInfo = $"Range: {rd.GetMinValue()} – {rd.GetMaxValue()}";
                                             }
                                         }
                                     }
@@ -1560,6 +1559,8 @@ namespace ProAppAddInSdeSearch
         public string DomainInfo { get; set; }
         public string DefaultValue { get; set; }
         public bool HasDomain => !string.IsNullOrEmpty(DomainName);
+        public ObservableCollection<DomainCodeValue> DomainValues { get; set; } = new ObservableCollection<DomainCodeValue>();
+        public bool HasDomainValues => DomainValues != null && DomainValues.Count > 0;
 
         public string FieldSummary
         {
@@ -1574,6 +1575,12 @@ namespace ProAppAddInSdeSearch
         }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
+    }
+
+    public class DomainCodeValue
+    {
+        public string Code { get; set; }
+        public string Value { get; set; }
     }
 
     // ═══════════════════════════════════════════════════
