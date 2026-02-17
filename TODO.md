@@ -1,6 +1,7 @@
 # TODO
 
 ## Export results
+## Automatically detect light/dark theme
 
 ## Show created/modified dates in the results list (partially done)
 
@@ -56,4 +57,5 @@ Add more granular search options to help users find exactly what they need.
 - [ ] Search by field value
 - [ ] Search all features created within a date range
 - [ ] Search feature classes for data created within date range
+
 
