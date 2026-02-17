@@ -1,5 +1,7 @@
 # TODO
 
+## Export results
+
 ## Show created/modified dates in the results list (partially done)
 
 Dates are already parsed from metadata XML (`CreaDate`, `ModDate`) and displayed in the
@@ -54,3 +56,4 @@ Add more granular search options to help users find exactly what they need.
 - [ ] Search by field value
 - [ ] Search all features created within a date range
 - [ ] Search feature classes for data created within date range
+
