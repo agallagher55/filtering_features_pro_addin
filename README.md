@@ -100,6 +100,15 @@ When using a seed cache, the status bar displays *"template data - click ↻ to 
 - **Keyboard** - Press Enter in the search box to filter, or in the manual path field to add.
 - **Visual indicators** - Color-coded geometry type icons (points, lines, polygons, etc.) and feature dataset badges for quick visual scanning.
 
+## Dates (Created / Modified)
+
+The created and modified dates shown in the add-in come from **ArcGIS metadata XML**, not from the actual database.
+
+- **CreatedDate** — parsed from `//CreaDate` or `//idinfo/citation/citeinfo/pubdate` in the metadata XML
+- **ModifiedDate** — parsed from `//ModDate` or `//metainfo/metd` in the metadata XML
+
+These are the **metadata authoring dates** (when someone last edited the item's metadata in the catalog), *not* the actual data creation/modification timestamps. If you want real data timestamps, they'd need to come from editor tracking fields (`CREATED_DATE`, `LAST_EDITED_DATE`) or the geodatabase system catalog tables instead.
+
 ## Troubleshooting
 
 | Problem | Solution |
