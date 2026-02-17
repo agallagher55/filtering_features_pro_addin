@@ -1,15 +1,15 @@
 # TODO
 
-## Show created/modified dates in the results list
+## Show created/modified dates in the results list (partially done)
 
 Dates are already parsed from metadata XML (`CreaDate`, `ModDate`) and displayed in the
-detail view, but they are **not visible in the results list**. Add them so users can
-see at a glance when a dataset was created and last modified without opening details.
+detail view. Created date is now shown in the results list.
 
 - [ ] Show `ModifiedDate` in the result list item (e.g. "Modified: 2025-03-14")
-- [ ] Show `CreatedDate` in the result list item
-- [ ] Handle missing dates gracefully (hide label when null)
-- [ ] Consider a relative format for recent dates ("2 days ago") and absolute for older ones
+- [x] Show `CreatedDate` in the result list item
+- [x] Handle missing dates gracefully (hide label when null)
+- [x] Consider a relative format for recent dates ("2 days ago") and absolute for older ones
+- [x] Parse dates during enumeration (not just detail view) so they appear in results list
 
 ## ~~Make feature dataset membership more obvious~~ ✅
 
@@ -49,7 +49,7 @@ The current design layout could be more space-efficient.
 
 Add more granular search options to help users find exactly what they need.
 
-- [ ] Search by tags only
+- [x] Search by tags only
 - [ ] Search by field name
 - [ ] Search by field value
 - [ ] Search all features created within a date range
