@@ -98,6 +98,7 @@ When using a seed cache, the status bar displays *"template data - click ↻ to 
 - **Light / Dark mode** - Toggle with the theme button in the header. Follows ArcGIS Pro's theme by default.
 - **Connection refresh** - The refresh button (⟳) in the header rescans for `.sde` files.
 - **Keyboard** - Press Enter in the search box to filter, or in the manual path field to add.
+- **Visual indicators** - Color-coded geometry type icons (points, lines, polygons, etc.) and feature dataset badges for quick visual scanning.
 
 ## Troubleshooting
 
@@ -117,6 +118,7 @@ ProAppAddInSdeSearch/
 ├── SdeSearchPaneViewModel.cs      # All business logic, caching, and data models
 ├── SdeSearchPaneView.xaml         # WPF UI layout
 ├── SdeSearchPaneView.xaml.cs      # UI code-behind (click handlers, key events)
+├── Converters.cs                  # WPF value converters for data binding
 ├── SeedCache.json                 # Bundled template cache for first-time users
 └── Images/ & DarkImages/          # Toolbar icons
 ```
