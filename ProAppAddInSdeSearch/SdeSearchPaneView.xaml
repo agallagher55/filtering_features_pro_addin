@@ -252,14 +252,21 @@
         </Border>
 
         <!-- ═══ FILTERS ═══ -->
-        <Border Grid.Row="3" Background="{DynamicResource FieldBg}" Padding="12,6" 
+        <Border Grid.Row="3" Background="{DynamicResource FieldBg}" Padding="12,6"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
             <WrapPanel>
-                <TextBlock Text="Show:" Foreground="{DynamicResource SecondaryText}" FontSize="11" 
+                <TextBlock Text="Show:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <CheckBox Content="Feature Classes" IsChecked="{Binding ShowFeatureClasses}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Tables" IsChecked="{Binding ShowTables}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Feature Datasets" IsChecked="{Binding ShowFeatureDatasets}" Style="{StaticResource ThemedCheckBox}"/>
+
+                <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="8,2" VerticalAlignment="Stretch"/>
+
+                <TextBlock Text="Tags:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
+                           VerticalAlignment="Center" Margin="0,0,8,0"/>
+                <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}"/>
+                <CheckBox Content="Archiving" IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}"/>
             </WrapPanel>
         </Border>
 

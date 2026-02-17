@@ -60,6 +60,10 @@ namespace ProAppAddInSdeSearch
         private bool _showTables = true;
         private bool _showFeatureDatasets = true;
 
+        // ── Tag filters (when checked, only show items with that tag) ──
+        private bool _filterEditorTracking;
+        private bool _filterArchiving;
+
         protected SdeSearchPaneViewModel()
         {
             SearchCommand = new RelayCommand(() => ApplyFilterAndSearch(), () => !IsSearching);
@@ -232,6 +236,18 @@ namespace ProAppAddInSdeSearch
         {
             get => _showFeatureDatasets;
             set { if (SetProperty(ref _showFeatureDatasets, value)) ApplyFilterAndSearch(); }
+        }
+
+        public bool FilterEditorTracking
+        {
+            get => _filterEditorTracking;
+            set { if (SetProperty(ref _filterEditorTracking, value)) ApplyFilterAndSearch(); }
+        }
+
+        public bool FilterArchiving
+        {
+            get => _filterArchiving;
+            set { if (SetProperty(ref _filterArchiving, value)) ApplyFilterAndSearch(); }
         }
 
         #endregion
@@ -678,6 +694,11 @@ namespace ProAppAddInSdeSearch
                 if (!ShowFeatureClasses && item.DatasetType == "Feature Class") return false;
                 if (!ShowTables && item.DatasetType == "Table") return false;
                 if (!ShowFeatureDatasets && item.DatasetType == "Feature Dataset") return false;
+
+                // Tag filters: when checked, exclude items that don't have the tag
+                if (FilterEditorTracking && !item.HasEditorTracking) return false;
+                if (FilterArchiving && !item.IsArchived) return false;
+
                 if (wildcard) return true;
                 return MatchesSearch(item, term);
             }).ToList();
@@ -1175,6 +1196,8 @@ namespace ProAppAddInSdeSearch
         private void ClearSearch()
         {
             SearchText = "";
+            FilterEditorTracking = false;
+            FilterArchiving = false;
             ApplyFilterAndSearch();
             ShowDetails = false;
             StatusText = _allDatasets.Count > 0 ? $"Showing all {_allDatasets.Count} items" : "Select a connection";
