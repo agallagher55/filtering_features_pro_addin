@@ -148,6 +148,7 @@
             <RowDefinition Height="Auto"/><!-- header -->
             <RowDefinition Height="Auto"/><!-- connection -->
             <RowDefinition Height="Auto"/><!-- search -->
+            <RowDefinition Height="Auto"/><!-- show types -->
             <RowDefinition Height="Auto"/><!-- filters -->
             <RowDefinition Height="Auto"/><!-- progress -->
             <RowDefinition Height="*"/>  <!-- content -->
@@ -260,10 +261,14 @@
                 <CheckBox Content="Feature Classes" IsChecked="{Binding ShowFeatureClasses}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Tables" IsChecked="{Binding ShowTables}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Feature Datasets" IsChecked="{Binding ShowFeatureDatasets}" Style="{StaticResource ThemedCheckBox}"/>
+            </WrapPanel>
+        </Border>
 
-                <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="8,2" VerticalAlignment="Stretch"/>
-
-                <TextBlock Text="Tags:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
+        <!-- ═══ TAG FILTERS ═══ -->
+        <Border Grid.Row="4" Background="{DynamicResource FieldBg}" Padding="12,6"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+            <WrapPanel>
+                <TextBlock Text="Filters:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Archiving" IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}"/>
@@ -271,7 +276,7 @@
         </Border>
 
         <!-- ═══ PROGRESS ═══ -->
-        <Border Grid.Row="4" Background="{DynamicResource PanelBg}" Padding="12,8"
+        <Border Grid.Row="5" Background="{DynamicResource PanelBg}" Padding="12,8"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                 Visibility="{Binding IsSearching, Converter={StaticResource BoolToVis}}">
             <StackPanel>
@@ -282,7 +287,7 @@
         </Border>
 
         <!-- ═══ MAIN CONTENT ═══ -->
-        <Grid Grid.Row="5">
+        <Grid Grid.Row="6">
 
             <!-- ── RESULTS LIST ── -->
             <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding ShowResultsList, Converter={StaticResource BoolToVis}}">
@@ -465,7 +470,7 @@
         </Grid>
 
         <!-- ═══ STATUS BAR ═══ -->
-        <Border Grid.Row="6" Background="{DynamicResource FieldBg}" Padding="12,6" 
+        <Border Grid.Row="7" Background="{DynamicResource FieldBg}" Padding="12,6"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
