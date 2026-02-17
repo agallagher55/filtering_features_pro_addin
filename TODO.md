@@ -54,3 +54,17 @@ Add more granular search options to help users find exactly what they need.
 - [ ] Search by field value
 - [ ] Search all features created within a date range
 - [ ] Search feature classes for data created within date range
+
+## Domain box (collapsible list of domain codes and values)
+
+In the detail view, add a collapsible section for each field that has a domain.
+
+- [ ] Show domain codes and their corresponding values in a list/table
+- [ ] Should collapse by default to keep the detail view clean
+
+## Indicator for attribute rules on a feature
+
+Detect if a feature class or table has attribute rules defined.
+
+- [ ] Detect if a feature class or table has attribute rules defined
+- [ ] Show an indicator/badge in the result list (similar to editor tracking icon)
