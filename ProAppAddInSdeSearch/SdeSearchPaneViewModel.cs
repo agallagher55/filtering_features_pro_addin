@@ -292,6 +292,9 @@ namespace ProAppAddInSdeSearch
                     ScanFolder(items, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                         "Esri", "ArcGISPro", "DatabaseConnections"), "ArcGIS Pro");
 
+                    ScanFolder(items, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "Esri", "ArcGISPro", "Favorites"), "Favorites");
+
                     RunOnUI(() =>
                     {
                         var previousPath = _selectedConnection?.Path;
