@@ -1364,8 +1364,13 @@ namespace ProAppAddInSdeSearch
 
         private static string GetCacheFile(string connectionPath)
         {
-            // Hash the connection path to create a stable filename
-            var hash = connectionPath.GetHashCode().ToString("X8");
+            // Use MD5 to create a stable, deterministic filename hash.
+            // string.GetHashCode() is randomized per process in .NET 8
+            // and produces different values on each app launch.
+            using var md5 = System.Security.Cryptography.MD5.Create();
+            var bytes = System.Text.Encoding.UTF8.GetBytes(connectionPath.ToUpperInvariant());
+            var hashBytes = md5.ComputeHash(bytes);
+            var hash = BitConverter.ToString(hashBytes).Replace("-", "");
             var name = Path.GetFileNameWithoutExtension(connectionPath);
             return Path.Combine(GetCacheDir(), $"{name}_{hash}.json");
         }
