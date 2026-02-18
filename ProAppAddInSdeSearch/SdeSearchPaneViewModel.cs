@@ -888,7 +888,11 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                var fieldNames = tableDef.GetFields().Select(f => f.Name.ToUpperInvariant()).ToHashSet();
+                // Use simple (unqualified) field names — SDE often returns
+                // schema-qualified names like "SDE.CREATED_USER".
+                var fieldNames = tableDef.GetFields()
+                    .Select(f => GetSimpleName(f.Name).ToUpperInvariant())
+                    .ToHashSet();
                 item.HasEditorTracking =
                     fieldNames.Contains("CREATED_USER") && fieldNames.Contains("CREATED_DATE") &&
                     fieldNames.Contains("LAST_EDITED_USER") && fieldNames.Contains("LAST_EDITED_DATE");
@@ -900,8 +904,10 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                // Check for archiving fields
-                var fieldNames = tableDef.GetFields().Select(f => f.Name.ToUpperInvariant()).ToHashSet();
+                // Check for archiving fields (use simple names for SDE-qualified fields)
+                var fieldNames = tableDef.GetFields()
+                    .Select(f => GetSimpleName(f.Name).ToUpperInvariant())
+                    .ToHashSet();
                 item.IsArchived = fieldNames.Contains("GDB_FROM_DATE") && fieldNames.Contains("GDB_TO_DATE");
 
                 // Also try the API approach
@@ -1462,7 +1468,7 @@ namespace ProAppAddInSdeSearch
         }
 
         // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
-        private const int CurrentCacheVersion = 2;
+        private const int CurrentCacheVersion = 3;
 
         private class CacheWrapper
         {
