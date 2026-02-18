@@ -907,16 +907,23 @@ namespace ProAppAddInSdeSearch
         {
             try
             {
-                // Use simple (unqualified) field names — SDE often returns
-                // schema-qualified names like "SDE.CREATED_USER".
-                var fieldNames = tableDef.GetFields()
-                    .Select(f => GetSimpleName(f.Name).ToUpperInvariant())
-                    .ToHashSet();
-                item.HasEditorTracking =
-                    fieldNames.Contains("CREATED_USER") && fieldNames.Contains("CREATED_DATE") &&
-                    fieldNames.Contains("LAST_EDITED_USER") && fieldNames.Contains("LAST_EDITED_DATE");
+                // Primary: use the SDK API — works with custom field names
+                item.HasEditorTracking = tableDef.IsEditorTrackingEnabled();
             }
-            catch { }
+            catch
+            {
+                // Fallback: check for default editor tracking field names
+                try
+                {
+                    var fieldNames = tableDef.GetFields()
+                        .Select(f => GetSimpleName(f.Name).ToUpperInvariant())
+                        .ToHashSet();
+                    item.HasEditorTracking =
+                        fieldNames.Contains("CREATED_USER") && fieldNames.Contains("CREATED_DATE") &&
+                        fieldNames.Contains("LAST_EDITED_USER") && fieldNames.Contains("LAST_EDITED_DATE");
+                }
+                catch { }
+            }
         }
 
         private void DetectArchiving(SdeDatasetItem item, TableDefinition tableDef, Geodatabase gdb)
@@ -1492,7 +1499,7 @@ namespace ProAppAddInSdeSearch
         }
 
         // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
-        private const int CurrentCacheVersion = 3;
+        private const int CurrentCacheVersion = 4;
 
         private class CacheWrapper
         {
