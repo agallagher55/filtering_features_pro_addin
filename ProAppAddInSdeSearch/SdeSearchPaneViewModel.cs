@@ -44,6 +44,7 @@ namespace ProAppAddInSdeSearch
 
         // ── Full dataset cache ────────────────────────
         private List<SdeDatasetItem> _allDatasets = new List<SdeDatasetItem>();
+        private int _loadGeneration; // guards against concurrent LoadAllDatasets calls
 
         // ── Visible results ───────────────────────────
         private ObservableCollection<SdeDatasetItem> _searchResults = new ObservableCollection<SdeDatasetItem>();
@@ -392,6 +393,9 @@ namespace ProAppAddInSdeSearch
         {
             if (SelectedConnection == null) return;
 
+            // Increment generation so any earlier in-flight call knows to discard its results
+            var myGeneration = ++_loadGeneration;
+
             IsSearching = true;
             ShowDetails = false;
             _allDatasets.Clear();
@@ -406,6 +410,9 @@ namespace ProAppAddInSdeSearch
                 var cached = SdeSearchCache.Load(connPath, out DateTime? cachedAt, out bool usedSeedCache);
                 if (cached != null && cached.Count > 0)
                 {
+                    // A newer call may have started; let it win
+                    if (myGeneration != _loadGeneration) return;
+
                     _allDatasets = cached;
                     _cacheTimestamp = cachedAt;
                     int fcs = cached.Count(d => d.DatasetType == "Feature Class");
@@ -444,6 +451,9 @@ namespace ProAppAddInSdeSearch
                 {
                     using (var gdb = new Geodatabase(new DatabaseConnectionFile(new Uri(connPath))))
                     {
+                        // Use a local list to avoid cross-thread corruption when a
+                        // concurrent LoadAllDatasets call clears _allDatasets.
+                        var localDatasets = new List<SdeDatasetItem>();
                         int total = 0;
 
                         // ── Feature Datasets + their contained feature classes ─────────────────────
@@ -470,7 +480,7 @@ namespace ProAppAddInSdeSearch
                                     TryLoadMetadata(item, def);
                                     DetectDates(item);
 
-                                    _allDatasets.Add(item);
+                                    localDatasets.Add(item);
                                     total++;
 
                                     // Enumerate datasets within this feature dataset
@@ -540,7 +550,7 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
 
-                                    _allDatasets.Add(item);
+                                    localDatasets.Add(item);
                                     total++; fc++;
                                     if (fc % 50 == 0) ReportProgress($"{total} items ({fc} feature classes)...");
                                 }
@@ -555,7 +565,7 @@ namespace ProAppAddInSdeSearch
                         try
                         {
                             var fcNames = new HashSet<string>(
-                                _allDatasets.Where(d => d.DatasetType == "Feature Class").Select(d => d.Name),
+                                localDatasets.Where(d => d.DatasetType == "Feature Class").Select(d => d.Name),
                                 StringComparer.OrdinalIgnoreCase);
 
                             int tc = 0;
@@ -582,7 +592,7 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
 
-                                    _allDatasets.Add(item);
+                                    localDatasets.Add(item);
                                     total++; tc++;
                                     if (tc % 50 == 0) ReportProgress($"{total} items ({tc} tables)...");
                                 }
@@ -599,7 +609,7 @@ namespace ProAppAddInSdeSearch
                             {
                                 try
                                 {
-                                    _allDatasets.Add(new SdeDatasetItem
+                                    localDatasets.Add(new SdeDatasetItem
                                     {
                                         Name = def.GetName(),
                                         SimpleName = GetSimpleName(def.GetName()),
@@ -618,7 +628,7 @@ namespace ProAppAddInSdeSearch
 
                         // ── Sort ─────────────────────────────────
                         ReportProgress($"Loaded {total} items. Sorting...");
-                        _allDatasets = _allDatasets
+                        localDatasets = localDatasets
                             .OrderBy(r => r.DatasetType switch
                             {
                                 "Feature Class" => 0,
@@ -632,13 +642,19 @@ namespace ProAppAddInSdeSearch
 
                         // ── Save cache ───────────────────────────
                         ReportProgress("Saving to cache...");
-                        SdeSearchCache.Save(connPath, _allDatasets);
+                        SdeSearchCache.Save(connPath, localDatasets);
+
+                        // If a newer LoadAllDatasets call started while we were
+                        // enumerating, discard our results — the newer call wins.
+                        if (myGeneration != _loadGeneration) return;
+
+                        _allDatasets = localDatasets;
                         _cacheTimestamp = DateTime.UtcNow;
 
-                        int fcs = _allDatasets.Count(d => d.DatasetType == "Feature Class");
-                        int tbls = _allDatasets.Count(d => d.DatasetType == "Table");
-                        int fds = _allDatasets.Count(d => d.DatasetType == "Feature Dataset");
-                        int rels = _allDatasets.Count(d => d.DatasetType == "Relationship Class");
+                        int fcs = localDatasets.Count(d => d.DatasetType == "Feature Class");
+                        int tbls = localDatasets.Count(d => d.DatasetType == "Table");
+                        int fds = localDatasets.Count(d => d.DatasetType == "Feature Dataset");
+                        int rels = localDatasets.Count(d => d.DatasetType == "Relationship Class");
 
                         RunOnUI(() =>
                         {
