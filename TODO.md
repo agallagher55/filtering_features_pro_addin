@@ -2,7 +2,6 @@
 
 ## Export results
 
-## pull sde files from favorites
 ## clean up cache folder of json files
 
 ## Show created/modified dates in the results list (partially done)
@@ -66,4 +65,5 @@ Detect if a feature class or table has attribute rules defined.
 
 - [ ] Detect if a feature class or table has attribute rules defined
 - [ ] Show an indicator/badge in the result list (similar to editor tracking icon)
+
 
