@@ -65,6 +65,9 @@ namespace ProAppAddInSdeSearch
         private bool _filterEditorTracking;
         private bool _filterArchiving;
 
+        // ── Data date querying toggle ────────────────────
+        private bool _includeDataDates;
+
         protected SdeSearchPaneViewModel()
         {
             SearchCommand = new RelayCommand(() => ApplyFilterAndSearch(), () => !IsSearching);
@@ -249,6 +252,16 @@ namespace ProAppAddInSdeSearch
         {
             get => _filterArchiving;
             set { if (SetProperty(ref _filterArchiving, value)) ApplyFilterAndSearch(); }
+        }
+
+        public bool IncludeDataDates
+        {
+            get => _includeDataDates;
+            set
+            {
+                if (SetProperty(ref _includeDataDates, value))
+                    SaveDataDatesPreference();
+            }
         }
 
         #endregion
@@ -553,6 +566,9 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
 
+                                    if (_includeDataDates && item.HasEditorTracking)
+                                        QueryDataDates(item, gdb);
+
                                     localDatasets.Add(item);
                                     total++; fc++;
                                     if (fc % 50 == 0) ReportProgress($"{total} items ({fc} feature classes)...");
@@ -594,6 +610,9 @@ namespace ProAppAddInSdeSearch
                                     DetectDates(item);
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
+
+                                    if (_includeDataDates && item.HasEditorTracking)
+                                        QueryDataDates(item, gdb);
 
                                     localDatasets.Add(item);
                                     total++; tc++;
@@ -829,6 +848,10 @@ namespace ProAppAddInSdeSearch
                             // ── Created / Modified dates from metadata ─
                             DetectDates(item);
 
+                            // ── Actual data dates (lazy) ──────────
+                            if (item.HasEditorTracking && !item.DataDatesQueried)
+                                QueryDataDates(item, gdb);
+
                             // ── Load all fields ──────────────────
                             try
                             {
@@ -983,6 +1006,73 @@ namespace ProAppAddInSdeSearch
             return null;
         }
 
+        /// <summary>
+        /// Queries actual data rows for MIN(CREATED_DATE) and MAX(LAST_EDITED_DATE).
+        /// Only works on datasets with editor tracking enabled.
+        /// Must be called on the MCT (inside QueuedTask.Run).
+        /// </summary>
+        private void QueryDataDates(SdeDatasetItem item, Geodatabase gdb)
+        {
+            if (!item.HasEditorTracking || item.DataDatesQueried) return;
+            item.DataDatesQueried = true;
+
+            try
+            {
+                using var table = gdb.OpenDataset<Table>(item.Name);
+                var fields = table.GetDefinition().GetFields();
+                var fieldNames = fields.Select(f => f.Name).ToList();
+
+                // Find the actual editor tracking field names (may be schema-qualified)
+                string createdDateField = fieldNames.FirstOrDefault(f =>
+                    GetSimpleName(f).Equals("CREATED_DATE", StringComparison.OrdinalIgnoreCase));
+                string lastEditedField = fieldNames.FirstOrDefault(f =>
+                    GetSimpleName(f).Equals("LAST_EDITED_DATE", StringComparison.OrdinalIgnoreCase));
+
+                var statsDescs = new List<StatisticsDescription>();
+                if (createdDateField != null)
+                    statsDescs.Add(new StatisticsDescription(
+                        fields.First(f => f.Name == createdDateField),
+                        new List<StatisticsFunction> { StatisticsFunction.Minimum }));
+                if (lastEditedField != null)
+                    statsDescs.Add(new StatisticsDescription(
+                        fields.First(f => f.Name == lastEditedField),
+                        new List<StatisticsFunction> { StatisticsFunction.Maximum }));
+
+                if (statsDescs.Count == 0) return;
+
+                var tsr = new TableStatisticsDescription(statsDescs);
+                var results = table.CalculateStatistics(tsr);
+                foreach (var result in results)
+                {
+                    foreach (var stat in result.StatisticsResults)
+                    {
+                        var dt = ConvertToDateTime(stat.Value);
+                        if (dt == null) continue;
+
+                        if (stat.StatisticsFunction == StatisticsFunction.Minimum)
+                            item.DataFirstCreated = dt;
+                        else if (stat.StatisticsFunction == StatisticsFunction.Maximum)
+                            item.DataLastEdited = dt;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"QueryDataDates error for {item.Name}: {ex.Message}");
+            }
+        }
+
+        private static DateTime? ConvertToDateTime(object value)
+        {
+            if (value == null) return null;
+            if (value is DateTime dt) return dt;
+            if (value is DateTimeOffset dto) return dto.UtcDateTime;
+            if (value is string s && DateTime.TryParse(s, out var parsed)) return parsed;
+            // CalculateStatistics may return date min/max as a double (OLE Automation date)
+            if (value is double d) try { return DateTime.FromOADate(d); } catch { }
+            return null;
+        }
+
         private string BuildMetadataDisplay(SdeDatasetItem item)
         {
             var lines = new List<string>();
@@ -1006,11 +1096,17 @@ namespace ProAppAddInSdeSearch
             if (flags.Count > 0)
                 lines.Add($"Flags: {string.Join("  |  ", flags)}");
 
-            // ── Dates ────────────────────────────
+            // ── Metadata dates ───────────────────
             if (item.CreatedDate.HasValue)
-                lines.Add($"Created: {item.CreatedDate.Value:yyyy-MM-dd}");
+                lines.Add($"Metadata Created: {item.CreatedDate.Value:yyyy-MM-dd}");
             if (item.ModifiedDate.HasValue)
-                lines.Add($"Last Modified: {item.ModifiedDate.Value:yyyy-MM-dd}");
+                lines.Add($"Metadata Modified: {item.ModifiedDate.Value:yyyy-MM-dd}");
+
+            // ── Actual data dates (editor tracking) ─
+            if (item.DataFirstCreated.HasValue)
+                lines.Add($"Data First Created: {item.DataFirstCreated.Value:yyyy-MM-dd HH:mm}");
+            if (item.DataLastEdited.HasValue)
+                lines.Add($"Data Last Edited: {item.DataLastEdited.Value:yyyy-MM-dd HH:mm}");
 
             // ── Metadata content ─────────────────
             if (item.HasMetadata)
@@ -1273,6 +1369,27 @@ namespace ProAppAddInSdeSearch
             _ => "•"
         };
 
+        private void SaveDataDatesPreference()
+        {
+            try
+            {
+                var dir = SdeSearchCache.GetCacheDir();
+                File.WriteAllText(Path.Combine(dir, "datadates.txt"), _includeDataDates ? "on" : "off");
+            }
+            catch { }
+        }
+
+        private void LoadDataDatesPreference()
+        {
+            try
+            {
+                var file = Path.Combine(SdeSearchCache.GetCacheDir(), "datadates.txt");
+                if (File.Exists(file))
+                    _includeDataDates = File.ReadAllText(file).Trim().Equals("on", StringComparison.OrdinalIgnoreCase);
+            }
+            catch { }
+        }
+
         private void SaveThemePreference()
         {
             try
@@ -1333,6 +1450,7 @@ namespace ProAppAddInSdeSearch
         protected override async Task InitializeAsync()
         {
             LoadThemePreference();
+            LoadDataDatesPreference();
 
             // Re-load connections when a project is opened, since the DockPane may
             // initialize before the project is fully loaded (e.g. restored from a
@@ -1549,9 +1667,15 @@ namespace ProAppAddInSdeSearch
         public bool HasEditorTracking { get; set; }
         public bool IsArchived { get; set; }
 
-        // Dates
+        // Dates (from ArcGIS metadata XML)
         public DateTime? CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
+
+        // Dates (from actual data rows via editor tracking fields)
+        public DateTime? DataLastEdited { get; set; }
+        public DateTime? DataFirstCreated { get; set; }
+        [JsonIgnore] public bool HasDataDates => DataLastEdited.HasValue || DataFirstCreated.HasValue;
+        [JsonIgnore] public bool DataDatesQueried { get; set; }
 
         // Metadata (lazy)
         public bool HasMetadata { get; set; }
@@ -1609,6 +1733,20 @@ namespace ProAppAddInSdeSearch
 
         [JsonIgnore]
         public bool HasCreatedDate => CreatedDate.HasValue;
+
+        [JsonIgnore]
+        public string DataLastEditedDisplay
+        {
+            get
+            {
+                if (!DataLastEdited.HasValue) return null;
+                var age = DateTime.UtcNow - DataLastEdited.Value;
+                if (age.TotalDays < 1) return "Edited today";
+                if (age.TotalDays < 2) return "Edited yesterday";
+                if (age.TotalDays < 30) return $"Edited {(int)age.TotalDays}d ago";
+                return $"Edited {DataLastEdited.Value:yyyy-MM-dd}";
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));
