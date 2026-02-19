@@ -1019,8 +1019,8 @@ namespace ProAppAddInSdeSearch
             try
             {
                 using var table = gdb.OpenDataset<Table>(item.Name);
-                var fields = table.GetDefinition().GetFields();
-                var fieldNames = fields.Select(f => f.Name).ToList();
+                var fieldNames = table.GetDefinition().GetFields()
+                    .Select(f => f.Name).ToList();
 
                 // Find the actual editor tracking field names (may be schema-qualified)
                 string createdDateField = fieldNames.FirstOrDefault(f =>
@@ -1028,33 +1028,13 @@ namespace ProAppAddInSdeSearch
                 string lastEditedField = fieldNames.FirstOrDefault(f =>
                     GetSimpleName(f).Equals("LAST_EDITED_DATE", StringComparison.OrdinalIgnoreCase));
 
-                var statsDescs = new List<StatisticsDescription>();
+                // Query oldest created row
                 if (createdDateField != null)
-                    statsDescs.Add(new StatisticsDescription(
-                        fields.First(f => f.Name == createdDateField),
-                        new List<StatisticsFunction> { StatisticsFunction.Minimum }));
+                    item.DataFirstCreated = QuerySingleDate(table, createdDateField, ascending: true);
+
+                // Query most recently edited row
                 if (lastEditedField != null)
-                    statsDescs.Add(new StatisticsDescription(
-                        fields.First(f => f.Name == lastEditedField),
-                        new List<StatisticsFunction> { StatisticsFunction.Maximum }));
-
-                if (statsDescs.Count == 0) return;
-
-                var tsr = new TableStatisticsDescription(statsDescs);
-                var results = table.CalculateStatistics(tsr);
-                foreach (var result in results)
-                {
-                    foreach (var stat in result.StatisticsResults)
-                    {
-                        var dt = ConvertToDateTime(stat.Value);
-                        if (dt == null) continue;
-
-                        if (stat.StatisticsFunction == StatisticsFunction.Minimum)
-                            item.DataFirstCreated = dt;
-                        else if (stat.StatisticsFunction == StatisticsFunction.Maximum)
-                            item.DataLastEdited = dt;
-                    }
-                }
+                    item.DataLastEdited = QuerySingleDate(table, lastEditedField, ascending: false);
             }
             catch (Exception ex)
             {
@@ -1062,14 +1042,30 @@ namespace ProAppAddInSdeSearch
             }
         }
 
-        private static DateTime? ConvertToDateTime(object value)
+        /// <summary>
+        /// Queries a single date value using ORDER BY to get either the min (ascending) or max (descending).
+        /// </summary>
+        private static DateTime? QuerySingleDate(Table table, string dateField, bool ascending)
         {
-            if (value == null) return null;
-            if (value is DateTime dt) return dt;
-            if (value is DateTimeOffset dto) return dto.UtcDateTime;
-            if (value is string s && DateTime.TryParse(s, out var parsed)) return parsed;
-            // CalculateStatistics may return date min/max as a double (OLE Automation date)
-            if (value is double d) try { return DateTime.FromOADate(d); } catch { }
+            try
+            {
+                var qf = new QueryFilter
+                {
+                    SubFields = dateField,
+                    WhereClause = $"{dateField} IS NOT NULL",
+                    PostfixClause = $"ORDER BY {dateField} " + (ascending ? "ASC" : "DESC")
+                };
+
+                using var cursor = table.Search(qf, false);
+                if (cursor.MoveNext())
+                {
+                    using var row = cursor.Current;
+                    var val = row[dateField];
+                    if (val is DateTime dt) return dt;
+                    if (val is DateTimeOffset dto) return dto.UtcDateTime;
+                }
+            }
+            catch { }
             return null;
         }
 
