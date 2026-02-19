@@ -260,7 +260,11 @@ namespace ProAppAddInSdeSearch
             set
             {
                 if (SetProperty(ref _includeDataDates, value))
+                {
                     SaveDataDatesPreference();
+                    if (value)
+                        _ = QueryDataDatesForLoadedItems();
+                }
             }
         }
 
@@ -1069,6 +1073,39 @@ namespace ProAppAddInSdeSearch
             return null;
         }
 
+        /// <summary>
+        /// Queries data dates for all already-loaded items that have editor tracking
+        /// but haven't been queried yet. Called when the user toggles the checkbox on.
+        /// </summary>
+        private async Task QueryDataDatesForLoadedItems()
+        {
+            var items = _allDatasets
+                .Where(i => i.HasEditorTracking && !i.DataDatesQueried)
+                .ToList();
+
+            if (items.Count == 0 || SelectedConnection == null) return;
+
+            var connPath = SelectedConnection.Path;
+            await QueuedTask.Run(() =>
+            {
+                try
+                {
+                    using var gdb = new Geodatabase(
+                        new DatabaseConnectionFile(new Uri(connPath)));
+                    foreach (var item in items)
+                    {
+                        if (!_includeDataDates) break; // user toggled off
+                        QueryDataDates(item, gdb);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine(
+                        $"QueryDataDatesForLoadedItems error: {ex.Message}");
+                }
+            });
+        }
+
         private string BuildMetadataDisplay(SdeDatasetItem item)
         {
             var lines = new List<string>();
@@ -1668,8 +1705,38 @@ namespace ProAppAddInSdeSearch
         public DateTime? ModifiedDate { get; set; }
 
         // Dates (from actual data rows via editor tracking fields)
-        public DateTime? DataLastEdited { get; set; }
-        public DateTime? DataFirstCreated { get; set; }
+        private DateTime? _dataLastEdited;
+        private DateTime? _dataFirstCreated;
+
+        public DateTime? DataLastEdited
+        {
+            get => _dataLastEdited;
+            set
+            {
+                if (_dataLastEdited != value)
+                {
+                    _dataLastEdited = value;
+                    OnPropertyChanged(nameof(DataLastEdited));
+                    OnPropertyChanged(nameof(DataLastEditedDisplay));
+                    OnPropertyChanged(nameof(HasDataDates));
+                }
+            }
+        }
+
+        public DateTime? DataFirstCreated
+        {
+            get => _dataFirstCreated;
+            set
+            {
+                if (_dataFirstCreated != value)
+                {
+                    _dataFirstCreated = value;
+                    OnPropertyChanged(nameof(DataFirstCreated));
+                    OnPropertyChanged(nameof(HasDataDates));
+                }
+            }
+        }
+
         [JsonIgnore] public bool HasDataDates => DataLastEdited.HasValue || DataFirstCreated.HasValue;
         [JsonIgnore] public bool DataDatesQueried { get; set; }
 
