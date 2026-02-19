@@ -190,12 +190,16 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <ComboBox Grid.Column="0" ItemsSource="{Binding Connections}" 
+                    <ComboBox Grid.Column="0" ItemsSource="{Binding Connections}"
                               SelectedItem="{Binding SelectedConnection, Mode=TwoWay}"
                               Style="{StaticResource ThemedComboBox}" MinHeight="30"/>
-                    <Button Grid.Column="1" Command="{Binding ReloadDataCommand}" ToolTip="Force refresh from SDE (bypass cache)"
+                    <Button Grid.Column="1" Command="{Binding ReloadDataCommand}"
+                            ToolTip="Reload data from the database, rebuilding the local cache"
                             Style="{StaticResource SecBtn}" Margin="4,0,0,0" Padding="8,4">
-                        <TextBlock Text="↻" FontSize="13" FontWeight="Bold"/>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="↻" FontSize="13" FontWeight="Bold" Margin="0,0,4,0"/>
+                            <TextBlock Text="Refresh" FontSize="11" VerticalAlignment="Center"/>
+                        </StackPanel>
                     </Button>
                 </Grid>
                 <Expander Header="Add connection manually..." Foreground="{DynamicResource SecondaryText}" 
