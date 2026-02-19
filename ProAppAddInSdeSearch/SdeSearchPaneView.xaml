@@ -276,6 +276,9 @@
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Archiving" IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}"/>
+                <Border Width="1" Background="{DynamicResource BorderBrush}" Margin="6,2" VerticalAlignment="Stretch"/>
+                <CheckBox Content="Query edit dates" IsChecked="{Binding IncludeDataDates}" Style="{StaticResource ThemedCheckBox}"
+                          ToolTip="Query each table for actual created/edited dates from editor tracking fields. Slower on refresh, but shows when data was last changed."/>
             </WrapPanel>
         </Border>
 
@@ -335,9 +338,13 @@
                                                    TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
                                     </StackPanel>
 
-                                    <TextBlock Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Margin="0,1,0,0"
-                                               Text="{Binding Subtitle}" Foreground="{DynamicResource SecondaryText}"
-                                               FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,1,0,0">
+                                        <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource SecondaryText}"
+                                                   FontSize="10" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding DataLastEditedDisplay}" FontSize="10" Margin="8,0,0,0"
+                                                   Foreground="{DynamicResource AccentLight}"
+                                                   Visibility="{Binding DataLastEditedDisplay, Converter={StaticResource NonEmptyToVis}}"/>
+                                    </StackPanel>
 
                                     <!-- Badges row: Feature dataset + flags -->
                                     <WrapPanel Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,3,0,0"
