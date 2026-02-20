@@ -66,4 +66,15 @@ Detect if a feature class or table has attribute rules defined.
 - [ ] Detect if a feature class or table has attribute rules defined
 - [ ] Show an indicator/badge in the result list (similar to editor tracking icon)
 
+## Subtype support
+
+Surface subtype information in the results list and detail view.
+
+- [ ] Add a flag/marker in the result list to indicate when an item uses subtypes
+- [ ] In the fields/domains detail section, show the different domains assigned per subtype when subtypes are present
+
+## Re-order metadata in detail view
+
+- [ ] Move the description field to appear before the summary in the detail view metadata section
+
 
