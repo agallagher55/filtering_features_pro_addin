@@ -560,6 +560,8 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
                                     DetectSubtypes(item, def);
+                                    item.Fields = EnumerateFields(def);
+                                    item.FieldCount = item.Fields.Count;
 
                                     localDatasets.Add(item);
                                     total++; fc++;
@@ -603,6 +605,8 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
                                     DetectSubtypes(item, def);
+                                    item.Fields = EnumerateFields(def);
+                                    item.FieldCount = item.Fields.Count;
 
                                     localDatasets.Add(item);
                                     total++; tc++;
@@ -827,9 +831,6 @@ namespace ProAppAddInSdeSearch
                             if (!item.HasMetadata)
                                 TryLoadMetadata(item, tableDef);
 
-                            // ── Field count (update cached value) ─
-                            try { item.FieldCount = tableDef.GetFields().Count; } catch { }
-
                             // ── Editor tracking detection ─────────
                             DetectEditorTracking(item, tableDef);
 
@@ -843,65 +844,18 @@ namespace ProAppAddInSdeSearch
                             DetectDates(item);
 
                             // ── Load all fields ──────────────────
-                            try
-                            {
-                                foreach (var field in tableDef.GetFields())
-                                {
-                                    var fi = new FieldInfo
-                                    {
-                                        Name = field.Name,
-                                        AliasName = field.AliasName ?? field.Name,
-                                        FieldType = field.FieldType.ToString(),
-                                        Length = field.Length,
-                                        IsNullable = field.IsNullable,
-                                        IsEditable = field.IsEditable,
-                                        TypeIcon = GetFieldTypeIcon(field.FieldType)
-                                    };
-
-                                    try
-                                    {
-                                        var domain = field.GetDomain();
-                                        if (domain != null)
-                                        {
-                                            fi.DomainName = domain.GetName();
-                                            if (domain is CodedValueDomain cvd)
-                                            {
-                                                fi.DomainType = "Coded Value";
-                                                var pairs = cvd.GetCodedValuePairs();
-                                                fi.DomainInfo = $"Coded Value ({pairs.Count} values)";
-                                                foreach (var kv in pairs)
-                                                    fi.DomainValues.Add(new DomainCodeValue { Code = kv.Key?.ToString() ?? "", Value = kv.Value?.ToString() ?? "" });
-                                            }
-                                            else if (domain is RangeDomain rd)
-                                            {
-                                                fi.DomainType = "Range";
-                                                fi.DomainInfo = $"Range: {rd.GetMinValue()} – {rd.GetMaxValue()}";
-                                            }
-                                        }
-                                    }
-                                    catch { }
-
-                                    try
-                                    {
-                                        var dv = field.GetDefaultValue();
-                                        if (dv != null) fi.DefaultValue = dv.ToString();
-                                    }
-                                    catch { }
-
-                                    fields.Add(fi);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                System.Diagnostics.Debug.WriteLine($"Field enumeration error: {ex.Message}");
-                            }
+                            fields = EnumerateFields(tableDef);
+                            item.Fields = fields;
+                            item.FieldCount = fields.Count;
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"Detail load error: {ex.Message}");
-                    RunOnUI(() => { DetailMetadata = $"Error loading details: {ex.Message}"; });
+                    // Fall back to cached fields when the live connection fails
+                    if (item.Fields != null && item.Fields.Count > 0)
+                        fields = item.Fields;
                 }
 
                 var meta = BuildMetadataDisplay(item);
@@ -1224,7 +1178,14 @@ namespace ProAppAddInSdeSearch
                         StandaloneTableFactory.Instance.CreateStandaloneTable(uri, map);
                     ReportStatus($"✓ Added \"{item.SimpleName}\" to map");
                 }
-                catch (Exception ex) { ReportStatus($"Error: {ex.Message}"); }
+                catch (Exception ex)
+                {
+                    var msg = ex.Message;
+                    if (msg.Contains("ORA-") || msg.Contains("TNS") || msg.Contains("DBMS") || msg.Contains("connect", StringComparison.OrdinalIgnoreCase))
+                        ReportStatus("Connection error — unable to reach the database. Check your network/VPN.");
+                    else
+                        ReportStatus($"Error adding to map: {msg}");
+                }
             });
         }
 
@@ -1296,6 +1257,61 @@ namespace ProAppAddInSdeSearch
             FieldType.Geometry => "Geo",
             _ => "•"
         };
+
+        private static List<FieldInfo> EnumerateFields(TableDefinition tableDef)
+        {
+            var fields = new List<FieldInfo>();
+            try
+            {
+                foreach (var field in tableDef.GetFields())
+                {
+                    var fi = new FieldInfo
+                    {
+                        Name = field.Name,
+                        AliasName = field.AliasName ?? field.Name,
+                        FieldType = field.FieldType.ToString(),
+                        Length = field.Length,
+                        IsNullable = field.IsNullable,
+                        IsEditable = field.IsEditable,
+                        TypeIcon = GetFieldTypeIcon(field.FieldType)
+                    };
+
+                    try
+                    {
+                        var domain = field.GetDomain();
+                        if (domain != null)
+                        {
+                            fi.DomainName = domain.GetName();
+                            if (domain is CodedValueDomain cvd)
+                            {
+                                fi.DomainType = "Coded Value";
+                                var pairs = cvd.GetCodedValuePairs();
+                                fi.DomainInfo = $"Coded Value ({pairs.Count} values)";
+                                foreach (var kv in pairs)
+                                    fi.DomainValues.Add(new DomainCodeValue { Code = kv.Key?.ToString() ?? "", Value = kv.Value?.ToString() ?? "" });
+                            }
+                            else if (domain is RangeDomain rd)
+                            {
+                                fi.DomainType = "Range";
+                                fi.DomainInfo = $"Range: {rd.GetMinValue()} – {rd.GetMaxValue()}";
+                            }
+                        }
+                    }
+                    catch { }
+
+                    try
+                    {
+                        var dv = field.GetDefaultValue();
+                        if (dv != null) fi.DefaultValue = dv.ToString();
+                    }
+                    catch { }
+
+                    fields.Add(fi);
+                }
+            }
+            catch { }
+            return fields;
+        }
 
         private void SaveThemePreference()
         {
@@ -1574,6 +1590,9 @@ namespace ProAppAddInSdeSearch
         public bool IsArchived { get; set; }
         public bool HasSubtypes { get; set; }
 
+        // Cached fields (for offline detail view)
+        public List<FieldInfo> Fields { get; set; } = new List<FieldInfo>();
+
         // Dates (from ArcGIS metadata XML)
         public DateTime? CreatedDate { get; set; }
         public DateTime? ModifiedDate { get; set; }
@@ -1652,10 +1671,11 @@ namespace ProAppAddInSdeSearch
         public string DomainType { get; set; }
         public string DomainInfo { get; set; }
         public string DefaultValue { get; set; }
-        public bool HasDomain => !string.IsNullOrEmpty(DomainName);
+        [JsonIgnore] public bool HasDomain => !string.IsNullOrEmpty(DomainName);
         public ObservableCollection<DomainCodeValue> DomainValues { get; set; } = new ObservableCollection<DomainCodeValue>();
-        public bool HasDomainValues => DomainValues != null && DomainValues.Count > 0;
+        [JsonIgnore] public bool HasDomainValues => DomainValues != null && DomainValues.Count > 0;
 
+        [JsonIgnore]
         public string FieldSummary
         {
             get
