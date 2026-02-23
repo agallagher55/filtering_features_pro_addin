@@ -1523,7 +1523,7 @@ namespace ProAppAddInSdeSearch
         }
 
         // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
-        private const int CurrentCacheVersion = 4;
+        private const int CurrentCacheVersion = 5;
 
         private class CacheWrapper
         {
