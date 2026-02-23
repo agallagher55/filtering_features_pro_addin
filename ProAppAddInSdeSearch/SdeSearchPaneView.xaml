@@ -276,6 +276,7 @@
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Archiving" IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}"/>
+                <CheckBox Content="Subtypes" IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}"/>
             </WrapPanel>
         </Border>
 
@@ -366,6 +367,13 @@
                                                 Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}">
                                             <TextBlock Text="Archiving" FontSize="9"
                                                        Foreground="#CE93D8" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <!-- Subtypes badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
+                                                Background="#33FF7043"
+                                                Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Subtypes" FontSize="9"
+                                                       Foreground="#FF8A65" VerticalAlignment="Center"/>
                                         </Border>
                                     </WrapPanel>
 

@@ -64,6 +64,7 @@ namespace ProAppAddInSdeSearch
         // ── Tag filters (when checked, only show items with that tag) ──
         private bool _filterEditorTracking;
         private bool _filterArchiving;
+        private bool _filterSubtypes;
 
         protected SdeSearchPaneViewModel()
         {
@@ -249,6 +250,12 @@ namespace ProAppAddInSdeSearch
         {
             get => _filterArchiving;
             set { if (SetProperty(ref _filterArchiving, value)) ApplyFilterAndSearch(); }
+        }
+
+        public bool FilterSubtypes
+        {
+            get => _filterSubtypes;
+            set { if (SetProperty(ref _filterSubtypes, value)) ApplyFilterAndSearch(); }
         }
 
         #endregion
@@ -552,6 +559,7 @@ namespace ProAppAddInSdeSearch
                                     DetectDates(item);
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
+                                    DetectSubtypes(item, def);
 
                                     localDatasets.Add(item);
                                     total++; fc++;
@@ -594,6 +602,7 @@ namespace ProAppAddInSdeSearch
                                     DetectDates(item);
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
+                                    DetectSubtypes(item, def);
 
                                     localDatasets.Add(item);
                                     total++; tc++;
@@ -717,6 +726,7 @@ namespace ProAppAddInSdeSearch
                 // Tag filters: when checked, exclude items that don't have the tag
                 if (FilterEditorTracking && !item.HasEditorTracking) return false;
                 if (FilterArchiving && !item.IsArchived) return false;
+                if (FilterSubtypes && !item.HasSubtypes) return false;
 
                 if (wildcard) return true;
                 return MatchesSearch(item, term);
@@ -826,6 +836,9 @@ namespace ProAppAddInSdeSearch
                             // ── Archiving detection ──────────────
                             DetectArchiving(item, tableDef, gdb);
 
+                            // ── Subtype detection ─────────────────
+                            DetectSubtypes(item, tableDef);
+
                             // ── Created / Modified dates from metadata ─
                             DetectDates(item);
 
@@ -901,6 +914,15 @@ namespace ProAppAddInSdeSearch
                     IsLoadingDetails = false;
                 });
             });
+        }
+
+        private static void DetectSubtypes(SdeDatasetItem item, TableDefinition tableDef)
+        {
+            try
+            {
+                item.HasSubtypes = tableDef.GetSubtypes().Count > 0;
+            }
+            catch { }
         }
 
         private void DetectEditorTracking(SdeDatasetItem item, TableDefinition tableDef)
@@ -1003,6 +1025,7 @@ namespace ProAppAddInSdeSearch
             var flags = new List<string>();
             if (item.HasEditorTracking) flags.Add("✓ Editor Tracking");
             if (item.IsArchived) flags.Add("✓ Archiving");
+            if (item.HasSubtypes) flags.Add("✓ Subtypes");
             if (flags.Count > 0)
                 lines.Add($"Flags: {string.Join("  |  ", flags)}");
 
@@ -1229,6 +1252,7 @@ namespace ProAppAddInSdeSearch
             SearchText = "";
             FilterEditorTracking = false;
             FilterArchiving = false;
+            FilterSubtypes = false;
             ApplyFilterAndSearch();
             ShowDetails = false;
             StatusText = _allDatasets.Count > 0 ? $"Showing all {_allDatasets.Count} items" : "Select a connection";
@@ -1548,6 +1572,7 @@ namespace ProAppAddInSdeSearch
         // Flags
         public bool HasEditorTracking { get; set; }
         public bool IsArchived { get; set; }
+        public bool HasSubtypes { get; set; }
 
         // Dates (from ArcGIS metadata XML)
         public DateTime? CreatedDate { get; set; }
@@ -1577,7 +1602,7 @@ namespace ProAppAddInSdeSearch
         }
 
         [JsonIgnore]
-        public bool HasFlags => HasEditorTracking || IsArchived;
+        public bool HasFlags => HasEditorTracking || IsArchived || HasSubtypes;
 
         [JsonIgnore]
         public bool HasBadges => HasFlags || !string.IsNullOrEmpty(FeatureDatasetName);
