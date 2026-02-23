@@ -40,6 +40,7 @@ MyDatabase_A1B2C3D4.json
 1. **Copy** one of these cache files
 2. **Rename** it to `SeedCache.json`
 3. **Place** it in your add-in deployment directory (same folder as the .dll files)
+4. **Rebuild** add-in so the new seed file is embedded in the .esriAddinX
 
 ## File Structure
 
@@ -96,3 +97,4 @@ ProAppAddInSdeSearch/
 - The seed cache is only used if no user cache exists
 - Once a user refreshes, their personal cache replaces the seed cache
 - Users can always force refresh with the ↻ button
+
