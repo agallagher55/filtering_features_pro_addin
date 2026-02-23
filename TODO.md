@@ -68,13 +68,13 @@ Detect if a feature class or table has attribute rules defined.
 
 ## Subtype support
 
-Surface subtype information for feature classes and tables that use them.
+Surface subtype information in the results list and detail view.
 
-- [ ] Add a flag/marker in the result list to indicate that an item uses subtypes (badge or icon, similar to Editor Tracking)
-- [ ] In the fields/domains detail section, show the different domains assigned per subtype when subtypes are present (e.g. group field domain info by subtype code/name)
+- [ ] Add a flag/marker in the result list to indicate when an item uses subtypes
+- [ ] In the fields/domains detail section, show the different domains assigned per subtype when subtypes are present
 
-## Re-order metadata fields in detail view
+## Re-order metadata in detail view
 
-- [ ] Move the description field to appear before the summary field in the detail view metadata section
+- [ ] Move the description field to appear before the summary in the detail view metadata section
 
 
