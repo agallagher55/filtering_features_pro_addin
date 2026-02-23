@@ -49,6 +49,17 @@ The current design layout could be more space-efficient.
 - [x] Compact the result list items (reduced padding, font sizes, icon sizes; removed metadata snippet preview)
 - [ ] Audit remaining spacing, padding, and margins across other UI sections
 
+## Query edit dates
+
+Surface actual first-created and last-edited dates by querying editor tracking fields directly from the database.
+
+- [ ] Re-implement "Query edit dates" checkbox in the Filters row
+- [ ] On enable, query `MIN(CREATED_DATE)` and `MAX(LAST_EDITED_DATE)` for each dataset that has editor tracking
+- [ ] Show "Data First Created" and "Data Last Edited" in the detail view metadata section
+- [ ] Show `DataLastEditedDisplay` (relative format) in the results list subtitle row
+- [ ] Persist user preference across sessions (datadates.txt)
+- [ ] Investigate performance — querying is slow on large databases; consider async batch loading with progress indication
+
 ## Expand search and filtering capabilities
 
 Add more granular search options to help users find exactly what they need.
