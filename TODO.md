@@ -1,5 +1,7 @@
 # TODO
 
+<img width="1138" height="287" alt="image" src="https://github.com/user-attachments/assets/251f4d13-c5fc-4ef8-b3e9-2dcedd794e8c" />
+
 <img width="1131" height="531" alt="image" src="https://github.com/user-attachments/assets/1ae1b307-e163-411c-900a-fc4d126af2f0" />
 
 
@@ -73,6 +75,7 @@ Show when caching started and ended.
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
