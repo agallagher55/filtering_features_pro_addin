@@ -295,22 +295,46 @@
         <Grid Grid.Row="6">
 
             <!-- ── RESULTS LIST ── -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding ShowResultsList, Converter={StaticResource BoolToVis}}">
-                <ItemsControl ItemsSource="{Binding SearchResults}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border Padding="10,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
-                                    Cursor="Hand" MouseLeftButtonUp="ResultItem_Click">
-                                <Border.Style>
-                                    <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{DynamicResource PanelBg}"/>
-                                        <Style.Triggers>
-                                            <Trigger Property="IsMouseOver" Value="True">
-                                                <Setter Property="Background" Value="{DynamicResource FieldBg}"/>
-                                            </Trigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Border.Style>
+            <!-- ListView with VirtualizingStackPanel: only renders visible rows, greatly
+                 reducing layout cost when hundreds of results are present. The ItemContainerStyle
+                 strips all default ListViewItem chrome (selection, focus rect, padding) so the
+                 DataTemplate Border controls the full visual appearance. -->
+            <ListView ItemsSource="{Binding SearchResults}"
+                      Visibility="{Binding ShowResultsList, Converter={StaticResource BoolToVis}}"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                      BorderThickness="0" Background="Transparent"
+                      HorizontalContentAlignment="Stretch">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0"/>
+                        <Setter Property="Margin" Value="0"/>
+                        <!-- Minimal template: no selection highlight, no focus rect -->
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="ListViewItem">
+                                    <ContentPresenter/>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="10,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                                Cursor="Hand" MouseLeftButtonUp="ResultItem_Click">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="{DynamicResource PanelBg}"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="{DynamicResource FieldBg}"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -387,9 +411,8 @@
                                 </Grid>
                             </Border>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
+                    </ListView.ItemTemplate>
+                </ListView>
             
             <!-- ── DETAIL VIEW ── -->
             <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding ShowDetails, Converter={StaticResource BoolToVis}}">
