@@ -60,6 +60,7 @@ Surface actual first-created and last-edited dates by querying editor tracking f
 
 
 # UI Changes
+## Change the icon for point geometry to a pushpin and the icon for tables to be a grid.
 ## Consider grouping results by feature dataset when the "Feature Datasets" filter is active
 
 ## SeedCachce
@@ -74,6 +75,7 @@ A progress bar shows users that something is happening, but only a basic number 
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
