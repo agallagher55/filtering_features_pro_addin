@@ -1,5 +1,8 @@
 # TODO
 
+<img width="1131" height="531" alt="image" src="https://github.com/user-attachments/assets/1ae1b307-e163-411c-900a-fc4d126af2f0" />
+
+
 # Plan for group deployment and then HRM deployment
 - [ ] Create deployment.md file. Consider how add-in updates will be given.
 
@@ -77,6 +80,7 @@ A progress bar shows users that something is happening, but only a basic number 
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
