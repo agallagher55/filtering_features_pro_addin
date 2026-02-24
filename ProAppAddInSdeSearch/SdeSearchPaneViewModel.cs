@@ -14,6 +14,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -65,6 +66,9 @@ namespace ProAppAddInSdeSearch
         private bool _filterEditorTracking;
         private bool _filterArchiving;
         private bool _filterSubtypes;
+
+        // ── Filter cancellation ───────────────────────
+        private CancellationTokenSource _filterCts;
 
         protected SdeSearchPaneViewModel()
         {
@@ -423,6 +427,8 @@ namespace ProAppAddInSdeSearch
                     // A newer call may have started; let it win
                     if (myGeneration != _loadGeneration) return;
 
+                    // Rebuild the [JsonIgnore] search index strings since they are not persisted
+                    foreach (var d in cached) BuildSearchTexts(d);
                     _allDatasets = cached;
                     _cacheTimestamp = cachedAt;
                     int fcs = cached.Count(d => d.DatasetType == "Feature Class");
@@ -489,6 +495,7 @@ namespace ProAppAddInSdeSearch
                                     // Load metadata for searching
                                     TryLoadMetadata(item, def);
                                     DetectDates(item);
+                                    BuildSearchTexts(item);
 
                                     localDatasets.Add(item);
                                     total++;
@@ -562,6 +569,7 @@ namespace ProAppAddInSdeSearch
                                     DetectSubtypes(item, def);
                                     // Field details are lazy-loaded on demand; only store the count for display
                                     try { item.FieldCount = def.GetFields().Count; } catch { }
+                                    BuildSearchTexts(item);
 
                                     localDatasets.Add(item);
                                     total++; fc++;
@@ -607,6 +615,7 @@ namespace ProAppAddInSdeSearch
                                     DetectSubtypes(item, def);
                                     // Field details are lazy-loaded on demand; only store the count for display
                                     try { item.FieldCount = def.GetFields().Count; } catch { }
+                                    BuildSearchTexts(item);
 
                                     localDatasets.Add(item);
                                     total++; tc++;
@@ -625,7 +634,7 @@ namespace ProAppAddInSdeSearch
                             {
                                 try
                                 {
-                                    localDatasets.Add(new SdeDatasetItem
+                                    var relItem = new SdeDatasetItem
                                     {
                                         Name = def.GetName(),
                                         SimpleName = GetSimpleName(def.GetName()),
@@ -634,7 +643,9 @@ namespace ProAppAddInSdeSearch
                                         CanAddToMap = false,
                                         ConnectionPath = connPath,
                                         MetadataSnippet = $"Origin: {GetSimpleName(def.GetOriginClass())} → Dest: {GetSimpleName(def.GetDestinationClass())}"
-                                    });
+                                    };
+                                    BuildSearchTexts(relItem);
+                                    localDatasets.Add(relItem);
                                     total++;
                                 }
                                 catch { }
@@ -718,62 +729,81 @@ namespace ProAppAddInSdeSearch
             // Auto-exit detail view so the user sees updated results immediately
             if (ShowDetails) ShowDetails = false;
 
+            // Cancel any in-flight filter — a new one supersedes it
+            _filterCts?.Cancel();
+            _filterCts = new CancellationTokenSource();
+            var token = _filterCts.Token;
+
+            // Capture all state on the UI thread before handing off to Task.Run,
+            // so the background thread never touches live ViewModel properties.
             string term = (SearchText ?? "").Trim();
             bool wildcard = string.IsNullOrEmpty(term);
+            string[] upperTerms = wildcard
+                ? Array.Empty<string>()
+                : term.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                      .Select(t => t.ToUpperInvariant()).ToArray();
 
-            var filtered = _allDatasets.Where(item =>
+            bool byName = _searchByName;
+            bool byMeta = _searchByMetadata;
+            bool byTags = _searchByTags;
+            bool showFc  = _showFeatureClasses;
+            bool showTbl = _showTables;
+            bool showFds = _showFeatureDatasets;
+            bool filtET  = _filterEditorTracking;
+            bool filtArch = _filterArchiving;
+            bool filtSub  = _filterSubtypes;
+            var datasets = _allDatasets; // capture reference; List<T> is thread-safe for concurrent reads
+
+            _ = Task.Run(() =>
             {
-                if (!ShowFeatureClasses && item.DatasetType == "Feature Class") return false;
-                if (!ShowTables && item.DatasetType == "Table") return false;
-                if (!ShowFeatureDatasets && item.DatasetType == "Feature Dataset") return false;
+                var filtered = datasets.Where(item =>
+                {
+                    if (!showFc  && item.DatasetType == "Feature Class") return false;
+                    if (!showTbl && item.DatasetType == "Table") return false;
+                    if (!showFds && item.DatasetType == "Feature Dataset") return false;
 
-                // Tag filters: when checked, exclude items that don't have the tag
-                if (FilterEditorTracking && !item.HasEditorTracking) return false;
-                if (FilterArchiving && !item.IsArchived) return false;
-                if (FilterSubtypes && !item.HasSubtypes) return false;
+                    if (filtET   && !item.HasEditorTracking) return false;
+                    if (filtArch && !item.IsArchived) return false;
+                    if (filtSub  && !item.HasSubtypes) return false;
 
-                if (wildcard) return true;
-                return MatchesSearch(item, term);
-            }).ToList();
+                    if (wildcard) return true;
+                    return MatchesSearch(item, upperTerms, byName, byMeta, byTags);
+                }).ToList();
 
-            RunOnUI(() =>
-            {
-                SearchResults.Clear();
-                foreach (var r in filtered) SearchResults.Add(r);
-                ResultCount = filtered.Count;
-                if (!wildcard)
-                    StatusText = $"Found {filtered.Count} of {_allDatasets.Count} matching \"{term}\"";
-            });
+                if (token.IsCancellationRequested) return;
+
+                RunOnUI(() =>
+                {
+                    if (token.IsCancellationRequested) return;
+                    SearchResults.Clear();
+                    foreach (var r in filtered) SearchResults.Add(r);
+                    ResultCount = filtered.Count;
+                    if (!wildcard)
+                        StatusText = $"Found {filtered.Count} of {datasets.Count} matching \"{term}\"";
+                });
+            }, token);
         }
 
-        private bool MatchesSearch(SdeDatasetItem item, string searchTerm)
+        /// <summary>
+        /// Match an item against pre-split, pre-uppercased search terms using the pre-computed
+        /// NameText / MetaText index strings. Ordinal comparison on already-uppercased strings
+        /// is significantly faster than OrdinalIgnoreCase on raw strings.
+        /// </summary>
+        private static bool MatchesSearch(SdeDatasetItem item, string[] upperTerms, bool byName, bool byMeta, bool byTags)
         {
-            var terms = searchTerm.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var term in terms)
+            foreach (var term in upperTerms)
             {
                 bool matched = false;
-                if (SearchByName)
-                {
-                    matched = Contains(item.Name, term) || Contains(item.SimpleName, term) || Contains(item.AliasName, term);
-                }
-                if (!matched && SearchByMetadata)
-                {
-                    matched = Contains(item.Description, term) || Contains(item.Summary, term) ||
-                              Contains(item.Tags, term) || Contains(item.Purpose, term) ||
-                              Contains(item.Credits, term) || Contains(item.MetadataSnippet, term) ||
-                              Contains(item.DatasetType, term);
-                }
-                if (!matched && SearchByTags)
-                {
-                    matched = Contains(item.Tags, term);
-                }
+                if (byName)
+                    matched = item.NameText != null && item.NameText.Contains(term, StringComparison.Ordinal);
+                if (!matched && byMeta)
+                    matched = item.MetaText != null && item.MetaText.Contains(term, StringComparison.Ordinal);
+                if (!matched && byTags)
+                    matched = item.TagsText != null && item.TagsText.Contains(term, StringComparison.Ordinal);
                 if (!matched) return false;
             }
             return true;
         }
-
-        private static bool Contains(string source, string value) =>
-            source?.IndexOf(value, StringComparison.OrdinalIgnoreCase) >= 0;
 
         #endregion
 
@@ -1206,6 +1236,28 @@ namespace ProAppAddInSdeSearch
 
         #region Helpers
 
+        /// <summary>
+        /// Builds the pre-computed uppercase search index strings on an item.
+        /// Called once per item after enumeration or cache load so the hot filter
+        /// loop can use fast Ordinal string comparisons instead of OrdinalIgnoreCase.
+        /// </summary>
+        private static void BuildSearchTexts(SdeDatasetItem item)
+        {
+            item.NameText = string.Concat(
+                item.Name ?? "", " ", item.SimpleName ?? "", " ", item.AliasName ?? ""
+            ).ToUpperInvariant();
+
+            item.TagsText = (item.Tags ?? "").ToUpperInvariant();
+
+            item.MetaText = string.Concat(
+                item.Name ?? "", " ", item.SimpleName ?? "", " ", item.AliasName ?? "", " ",
+                item.Description ?? "", " ", item.Summary ?? "", " ",
+                item.Tags ?? "", " ", item.Purpose ?? "", " ",
+                item.Credits ?? "", " ", item.MetadataSnippet ?? "", " ",
+                item.DatasetType ?? ""
+            ).ToUpperInvariant();
+        }
+
         private void ClearSearch()
         {
             SearchText = "";
@@ -1593,6 +1645,13 @@ namespace ProAppAddInSdeSearch
         // they are never written to the cache JSON.
         [JsonIgnore]
         public List<FieldInfo> Fields { get; set; } = new List<FieldInfo>();
+
+        // Pre-computed uppercase search index strings — built after load, never cached.
+        // Using already-uppercased strings + Ordinal comparison is faster than OrdinalIgnoreCase
+        // on raw strings, and avoids repeated null checks inside the hot filter loop.
+        [JsonIgnore] public string NameText { get; set; }  // Name + SimpleName + AliasName
+        [JsonIgnore] public string MetaText { get; set; }  // all searchable fields combined
+        [JsonIgnore] public string TagsText { get; set; }  // Tags only
 
         // Dates (from ArcGIS metadata XML)
         public DateTime? CreatedDate { get; set; }
