@@ -1179,8 +1179,26 @@ namespace ProAppAddInSdeSearch
 
         private string GetXmlText(System.Xml.XmlDocument doc, string xpath)
         {
-            try { var n = doc.SelectSingleNode(xpath); return n != null && !string.IsNullOrWhiteSpace(n.InnerText) ? n.InnerText.Trim() : null; }
+            try { var n = doc.SelectSingleNode(xpath); return n != null && !string.IsNullOrWhiteSpace(n.InnerText) ? StripHtml(n.InnerText) : null; }
             catch { return null; }
+        }
+
+        // Strips HTML tags and decodes entities left behind by ArcGIS metadata editors
+        // which store description/summary fields as embedded HTML fragments.
+        private static string StripHtml(string html)
+        {
+            if (string.IsNullOrWhiteSpace(html)) return html;
+            // Replace block-level closing tags with a newline so paragraphs are preserved
+            var text = System.Text.RegularExpressions.Regex.Replace(
+                html, @"</?(div|p|br|li|h\d)[^>]*>", "\n",
+                System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            // Strip all remaining tags
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"<[^>]+>", "");
+            // Decode HTML entities (&amp; &lt; &#160; etc.)
+            text = System.Net.WebUtility.HtmlDecode(text);
+            // Collapse runs of blank lines to a single blank line and trim
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"\n{3,}", "\n\n").Trim();
+            return text;
         }
 
         private void AddXmlNodes(List<string> tags, System.Xml.XmlDocument doc, string xpath)
