@@ -560,8 +560,8 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
                                     DetectSubtypes(item, def);
-                                    item.Fields = EnumerateFields(def);
-                                    item.FieldCount = item.Fields.Count;
+                                    // Field details are lazy-loaded on demand; only store the count for display
+                                    try { item.FieldCount = def.GetFields().Count; } catch { }
 
                                     localDatasets.Add(item);
                                     total++; fc++;
@@ -605,8 +605,8 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
                                     DetectSubtypes(item, def);
-                                    item.Fields = EnumerateFields(def);
-                                    item.FieldCount = item.Fields.Count;
+                                    // Field details are lazy-loaded on demand; only store the count for display
+                                    try { item.FieldCount = def.GetFields().Count; } catch { }
 
                                     localDatasets.Add(item);
                                     total++; tc++;
@@ -853,9 +853,7 @@ namespace ProAppAddInSdeSearch
                 catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"Detail load error: {ex.Message}");
-                    // Fall back to cached fields when the live connection fails
-                    if (item.Fields != null && item.Fields.Count > 0)
-                        fields = item.Fields;
+                    // fields remains empty — connection failure, nothing to fall back to
                 }
 
                 var meta = BuildMetadataDisplay(item);
@@ -1539,7 +1537,8 @@ namespace ProAppAddInSdeSearch
         }
 
         // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
-        private const int CurrentCacheVersion = 5;
+        // v6: Fields removed from cache — lazy-loaded on demand instead
+        private const int CurrentCacheVersion = 6;
 
         private class CacheWrapper
         {
@@ -1590,7 +1589,9 @@ namespace ProAppAddInSdeSearch
         public bool IsArchived { get; set; }
         public bool HasSubtypes { get; set; }
 
-        // Cached fields (for offline detail view)
+        // Fields are lazy-loaded on demand when the user opens the detail view;
+        // they are never written to the cache JSON.
+        [JsonIgnore]
         public List<FieldInfo> Fields { get; set; } = new List<FieldInfo>();
 
         // Dates (from ArcGIS metadata XML)
