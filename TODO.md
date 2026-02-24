@@ -8,6 +8,8 @@
 
 
 # New Functionality
+## Filter by geometry type
+## Use of wildcards in search
 ## Re-order metadata in detail view
 
 - [X] Move the description field to appear before the summary in the detail view metadata section
@@ -75,6 +77,7 @@ A progress bar shows users that something is happening, but only a basic number 
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
