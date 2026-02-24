@@ -1722,10 +1722,11 @@ namespace ProAppAddInSdeSearch
             {
                 var wrapper = new CacheWrapper
                 {
-                    CacheVersion = CurrentCacheVersion,
-                    ConnectionPath = connectionPath,
-                    CachedAt = DateTime.UtcNow,
-                    Datasets = items
+                    CacheVersion       = CurrentCacheVersion,
+                    ConnectionPath     = connectionPath,
+                    CachedAt           = DateTime.UtcNow,
+                    SeedCacheTimestamp = null,   // null = user-generated; seed will never replace this cache
+                    Datasets           = items
                 };
                 var json = JsonSerializer.Serialize(wrapper, new JsonSerializerOptions { WriteIndented = false });
                 File.WriteAllText(GetCacheFile(connectionPath), json);
@@ -1743,29 +1744,52 @@ namespace ProAppAddInSdeSearch
 
             try
             {
-                var file = GetCacheFile(connectionPath);
+                var file     = GetCacheFile(connectionPath);
+                var seedFile = GetSeedCacheFile();
+                bool hasSeed = !string.IsNullOrEmpty(seedFile) && File.Exists(seedFile);
 
-                // If user cache doesn't exist, check for seed cache
-                if (!File.Exists(file))
+                // ── If a user cache exists, check whether it is an outdated seeded copy ──
+                // A seeded cache stores SeedCacheTimestamp = the seed's CachedAt.
+                // If the deployed seed now has a different CachedAt, the seed was updated
+                // since this user last loaded — replace their copy with the new seed.
+                if (File.Exists(file) && hasSeed)
                 {
-                    var seedFile = GetSeedCacheFile();
-                    if (!string.IsNullOrEmpty(seedFile) && File.Exists(seedFile))
+                    try
                     {
-                        // Copy seed cache to user cache location for this connection
-                        try
+                        var existingWrapper = JsonSerializer.Deserialize<CacheWrapper>(File.ReadAllText(file));
+                        if (existingWrapper?.SeedCacheTimestamp != null) // was seeded, not a manual refresh
                         {
-                            File.Copy(seedFile, file, overwrite: false);
-                            usedSeedCache = true;
-                            System.Diagnostics.Debug.WriteLine($"Initialized cache from seed file for {connectionPath}");
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Seed cache copy error: {ex.Message}");
-                            return null;
+                            var seedWrapper = JsonSerializer.Deserialize<CacheWrapper>(File.ReadAllText(seedFile));
+                            if (seedWrapper != null && seedWrapper.CachedAt != existingWrapper.SeedCacheTimestamp)
+                            {
+                                // New seed deployed — discard the stale seeded copy
+                                System.Diagnostics.Debug.WriteLine($"Seed cache updated ({existingWrapper.SeedCacheTimestamp} → {seedWrapper.CachedAt}); replacing user cache for {connectionPath}");
+                                File.Delete(file);
+                            }
                         }
                     }
-                    else
+                    catch { /* non-fatal: fall through and use existing cache */ }
+                }
+
+                // ── If no user cache (new user, or just deleted above), apply seed ──
+                if (!File.Exists(file))
+                {
+                    if (!hasSeed) return null;
+                    try
                     {
+                        // Deserialize the seed, stamp SeedCacheTimestamp so we can detect
+                        // future seed updates, then write it as the user's cache file.
+                        var seedWrapper = JsonSerializer.Deserialize<CacheWrapper>(File.ReadAllText(seedFile));
+                        if (seedWrapper?.Datasets == null) return null;
+                        seedWrapper.SeedCacheTimestamp = seedWrapper.CachedAt;
+                        File.WriteAllText(file, JsonSerializer.Serialize(seedWrapper,
+                            new JsonSerializerOptions { WriteIndented = false }));
+                        usedSeedCache = true;
+                        System.Diagnostics.Debug.WriteLine($"Initialized cache from seed file for {connectionPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Seed cache copy error: {ex.Message}");
                         return null;
                     }
                 }
@@ -1774,7 +1798,7 @@ namespace ProAppAddInSdeSearch
                 var wrapper = JsonSerializer.Deserialize<CacheWrapper>(json);
                 if (wrapper?.Datasets == null) return null;
 
-                // Reject stale cache from older versions (e.g. missing FeatureDatasetName)
+                // Reject stale cache from older schema versions
                 if (wrapper.CacheVersion < CurrentCacheVersion)
                 {
                     try { File.Delete(file); } catch { }
@@ -1835,13 +1859,20 @@ namespace ProAppAddInSdeSearch
 
         // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
         // v6: Fields removed from cache — lazy-loaded on demand instead
-        private const int CurrentCacheVersion = 6;
+        // v7: SeedCacheTimestamp added to detect updated seed deployments
+        private const int CurrentCacheVersion = 7;
 
         private class CacheWrapper
         {
             public int CacheVersion { get; set; }
             public string ConnectionPath { get; set; }
             public DateTime CachedAt { get; set; }
+            /// <summary>
+            /// Set to the seed's CachedAt when this file was populated from SeedCache.json.
+            /// Null when the user generated this cache via a live database refresh.
+            /// Used to detect when a new seed deployment should replace this file.
+            /// </summary>
+            public DateTime? SeedCacheTimestamp { get; set; }
             public List<SdeDatasetItem> Datasets { get; set; }
         }
     }
