@@ -1,0 +1,18 @@
+{
+  "Fields": [
+    { "Key": "FullName",         "Label": "Full Name",         "Visible": true },
+    { "Key": "Type",             "Label": "Type",              "Visible": true },
+    { "Key": "Alias",            "Label": "Alias",             "Visible": true },
+    { "Key": "Geometry",         "Label": "Geometry",          "Visible": true },
+    { "Key": "SpatialReference", "Label": "Spatial Reference", "Visible": true },
+    { "Key": "FieldCount",       "Label": "Fields",            "Visible": true },
+    { "Key": "Flags",            "Label": "Flags",             "Visible": true },
+    { "Key": "CreatedDate",      "Label": "Metadata Created",  "Visible": true },
+    { "Key": "ModifiedDate",     "Label": "Metadata Modified", "Visible": true },
+    { "Key": "Description",      "Label": "Description",       "Visible": true },
+    { "Key": "Summary",          "Label": "Summary",           "Visible": true },
+    { "Key": "Tags",             "Label": "Tags",              "Visible": true },
+    { "Key": "Credits",          "Label": "Credits",           "Visible": true },
+    { "Key": "UseConstraints",   "Label": "Use Constraints",   "Visible": true }
+  ]
+}
