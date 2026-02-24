@@ -71,15 +71,14 @@ Surface actual first-created and last-edited dates by querying editor tracking f
 ## SeedCachce
 ### Explore better ways to show SeedCache.json creation
 
-Creating the seedCache.json file takes a long time to index. Users need visibility into the progress of this operation.
-A progress bar shows users that something is happening, but only a basic number of feature datasets, features, tables, etc. is given, but no context out of how many feature datasets, features, tables, etc. It would be nice to have an indication of a true sense of progress
+Show when caching started and ended.
 
-- [ ] Add a progress indicator or metric to show seedCache.json creation status
 - [ ] Investigate faster indexing methods or optimizations
 
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
