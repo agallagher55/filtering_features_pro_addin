@@ -1,5 +1,8 @@
 # TODO
 
+# Plan for group deployment and then HRM deployment
+- [ ] Create deployment.md file. Consider how add-in updates will be given.
+
 # Optimization
 ## Clean up cache folder of json files
 
@@ -71,5 +74,6 @@ A progress bar shows users that something is happening, but only a basic number 
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
