@@ -15,15 +15,8 @@
 # New Functionality
 ## Filter by geometry type
 ## Use of wildcards in search
-## Re-order metadata in detail view
-
-- [X] Move the description field to appear before the summary in the detail view metadata section
-  - Done with a MetadataSettings.json file
-    - Edit %LocalAppData%\ProAppAddInSdeSearch\Cache\metadata_settings.json
-        Reorder — move an entry up/down in the Fields array
-        Hide — set "Visible": false
-        Relabel — change "Label" (e.g. "Abstract" instead of "Description")
-    - CREATE MetadataSettings.json md file
+## CREATE MetadataSettings.json md file
+## Remove html tags from metadata
 
 ## Export results
 
@@ -80,6 +73,7 @@ Show when caching started and ended.
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
