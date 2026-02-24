@@ -70,6 +70,9 @@ namespace ProAppAddInSdeSearch
         // ── Filter cancellation ───────────────────────
         private CancellationTokenSource _filterCts;
 
+        // ── Metadata display settings ─────────────────
+        private MetadataSettings _metadataSettings = new();
+
         protected SdeSearchPaneViewModel()
         {
             SearchCommand = new RelayCommand(() => ApplyFilterAndSearch(), () => !IsSearching);
@@ -991,50 +994,80 @@ namespace ProAppAddInSdeSearch
         {
             var lines = new List<string>();
 
-            lines.Add($"Full Name: {item.Name}");
-            lines.Add($"Type: {item.DatasetType}");
+            // Pre-build flags once (referenced by the "Flags" key)
+            var flagParts = new List<string>();
+            if (item.HasEditorTracking) flagParts.Add("✓ Editor Tracking");
+            if (item.IsArchived)        flagParts.Add("✓ Archiving");
+            if (item.HasSubtypes)       flagParts.Add("✓ Subtypes");
 
-            if (!string.IsNullOrWhiteSpace(item.AliasName) && item.AliasName != item.SimpleName)
-                lines.Add($"Alias: {item.AliasName}");
-            if (!string.IsNullOrWhiteSpace(item.GeometryType))
-                lines.Add($"Geometry: {item.GeometryType}");
-            if (!string.IsNullOrWhiteSpace(item.SpatialReference))
-                lines.Add($"Spatial Reference: {item.SpatialReference}");
-            if (item.FieldCount > 0)
-                lines.Add($"Fields: {item.FieldCount}");
+            bool hasAnyMetadataContent = false;
 
-            // ── Flags ────────────────────────────
-            var flags = new List<string>();
-            if (item.HasEditorTracking) flags.Add("✓ Editor Tracking");
-            if (item.IsArchived) flags.Add("✓ Archiving");
-            if (item.HasSubtypes) flags.Add("✓ Subtypes");
-            if (flags.Count > 0)
-                lines.Add($"Flags: {string.Join("  |  ", flags)}");
-
-            // ── Metadata dates ───────────────────
-            if (item.CreatedDate.HasValue)
-                lines.Add($"Metadata Created: {item.CreatedDate.Value:yyyy-MM-dd}");
-            if (item.ModifiedDate.HasValue)
-                lines.Add($"Metadata Modified: {item.ModifiedDate.Value:yyyy-MM-dd}");
-
-            // ── Metadata content ─────────────────
-            if (item.HasMetadata)
+            foreach (var field in _metadataSettings.Fields)
             {
-                if (!string.IsNullOrWhiteSpace(item.Description))
-                    lines.Add($"\nDescription:\n{item.Description}");
-                if (!string.IsNullOrWhiteSpace(item.Summary) && item.Summary != item.Description)
-                    lines.Add($"\nSummary:\n{item.Summary}");
-                if (!string.IsNullOrWhiteSpace(item.Tags))
-                    lines.Add($"\nTags: {item.Tags}");
-                if (!string.IsNullOrWhiteSpace(item.Credits))
-                    lines.Add($"\nCredits: {item.Credits}");
-                if (!string.IsNullOrWhiteSpace(item.UseConstraints))
-                    lines.Add($"\nUse Constraints: {item.UseConstraints}");
+                if (!field.Visible) continue;
+
+                switch (field.Key)
+                {
+                    case "FullName":
+                        lines.Add($"{field.Label}: {item.Name}");
+                        break;
+                    case "Type":
+                        lines.Add($"{field.Label}: {item.DatasetType}");
+                        break;
+                    case "Alias":
+                        if (!string.IsNullOrWhiteSpace(item.AliasName) && item.AliasName != item.SimpleName)
+                            lines.Add($"{field.Label}: {item.AliasName}");
+                        break;
+                    case "Geometry":
+                        if (!string.IsNullOrWhiteSpace(item.GeometryType))
+                            lines.Add($"{field.Label}: {item.GeometryType}");
+                        break;
+                    case "SpatialReference":
+                        if (!string.IsNullOrWhiteSpace(item.SpatialReference))
+                            lines.Add($"{field.Label}: {item.SpatialReference}");
+                        break;
+                    case "FieldCount":
+                        if (item.FieldCount > 0)
+                            lines.Add($"{field.Label}: {item.FieldCount}");
+                        break;
+                    case "Flags":
+                        if (flagParts.Count > 0)
+                            lines.Add($"{field.Label}: {string.Join("  |  ", flagParts)}");
+                        break;
+                    case "CreatedDate":
+                        if (item.CreatedDate.HasValue)
+                            lines.Add($"{field.Label}: {item.CreatedDate.Value:yyyy-MM-dd}");
+                        break;
+                    case "ModifiedDate":
+                        if (item.ModifiedDate.HasValue)
+                            lines.Add($"{field.Label}: {item.ModifiedDate.Value:yyyy-MM-dd}");
+                        break;
+                    case "Description":
+                        if (item.HasMetadata && !string.IsNullOrWhiteSpace(item.Description))
+                        { lines.Add($"\n{field.Label}:\n{item.Description}"); hasAnyMetadataContent = true; }
+                        break;
+                    case "Summary":
+                        if (item.HasMetadata && !string.IsNullOrWhiteSpace(item.Summary)
+                            && item.Summary != item.Description)
+                        { lines.Add($"\n{field.Label}:\n{item.Summary}"); hasAnyMetadataContent = true; }
+                        break;
+                    case "Tags":
+                        if (item.HasMetadata && !string.IsNullOrWhiteSpace(item.Tags))
+                        { lines.Add($"\n{field.Label}: {item.Tags}"); hasAnyMetadataContent = true; }
+                        break;
+                    case "Credits":
+                        if (item.HasMetadata && !string.IsNullOrWhiteSpace(item.Credits))
+                        { lines.Add($"\n{field.Label}: {item.Credits}"); hasAnyMetadataContent = true; }
+                        break;
+                    case "UseConstraints":
+                        if (item.HasMetadata && !string.IsNullOrWhiteSpace(item.UseConstraints))
+                        { lines.Add($"\n{field.Label}: {item.UseConstraints}"); hasAnyMetadataContent = true; }
+                        break;
+                }
             }
-            else
-            {
+
+            if (!item.HasMetadata || !hasAnyMetadataContent)
                 lines.Add("\n(No metadata available)");
-            }
 
             return string.Join("\n", lines);
         }
@@ -1390,6 +1423,68 @@ namespace ProAppAddInSdeSearch
             IsDarkMode = DetectSystemDarkMode();
         }
 
+        private void LoadMetadataSettings()
+        {
+            var cacheDir = SdeSearchCache.GetCacheDir();
+            var userFile = Path.Combine(cacheDir, "metadata_settings.json");
+
+            // Seed the user-editable copy from the bundled default on first run
+            if (!File.Exists(userFile))
+            {
+                try
+                {
+                    var bundled = Path.Combine(
+                        Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? "",
+                        "metadata_settings.json");
+                    if (File.Exists(bundled))
+                        File.Copy(bundled, userFile);
+                }
+                catch { }
+            }
+
+            // Load from the user copy, falling back to the bundled file
+            var toLoad = File.Exists(userFile) ? userFile
+                : Path.Combine(
+                    Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) ?? "",
+                    "metadata_settings.json");
+
+            try
+            {
+                if (File.Exists(toLoad))
+                {
+                    var json = File.ReadAllText(toLoad);
+                    _metadataSettings = JsonSerializer.Deserialize<MetadataSettings>(json)
+                                        ?? new MetadataSettings();
+                }
+            }
+            catch { }
+
+            // Fall back to hardcoded defaults if file was missing or empty
+            if (_metadataSettings.Fields.Count == 0)
+                _metadataSettings = HardcodedDefaultMetadataSettings();
+        }
+
+        private static MetadataSettings HardcodedDefaultMetadataSettings() => new MetadataSettings
+        {
+            Fields = new List<MetadataFieldConfig>
+            {
+                new() { Key = "FullName",         Label = "Full Name",         Visible = true },
+                new() { Key = "Type",             Label = "Type",              Visible = true },
+                new() { Key = "Alias",            Label = "Alias",             Visible = true },
+                new() { Key = "Geometry",         Label = "Geometry",          Visible = true },
+                new() { Key = "SpatialReference", Label = "Spatial Reference", Visible = true },
+                new() { Key = "FieldCount",       Label = "Fields",            Visible = true },
+                new() { Key = "Flags",            Label = "Flags",             Visible = true },
+                new() { Key = "CreatedDate",      Label = "Metadata Created",  Visible = true },
+                new() { Key = "ModifiedDate",     Label = "Metadata Modified", Visible = true },
+                new() { Key = "Description",      Label = "Description",       Visible = true },
+                new() { Key = "Summary",          Label = "Summary",           Visible = true },
+                new() { Key = "Tags",             Label = "Tags",              Visible = true },
+                new() { Key = "Credits",          Label = "Credits",           Visible = true },
+                new() { Key = "UseConstraints",   Label = "Use Constraints",   Visible = true },
+            }
+        };
+
         private static bool DetectSystemDarkMode()
         {
             // 1. Try ArcGIS Pro's application theme
@@ -1423,6 +1518,7 @@ namespace ProAppAddInSdeSearch
         protected override async Task InitializeAsync()
         {
             LoadThemePreference();
+            LoadMetadataSettings();
 
             // Re-load connections when a project is opened, since the DockPane may
             // initialize before the project is fully loaded (e.g. restored from a
@@ -1755,6 +1851,22 @@ namespace ProAppAddInSdeSearch
     {
         public string Code { get; set; }
         public string Value { get; set; }
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  METADATA SETTINGS
+    // ═══════════════════════════════════════════════════
+
+    internal class MetadataFieldConfig
+    {
+        [JsonInclude] public string Key     { get; set; } = "";
+        [JsonInclude] public string Label   { get; set; } = "";
+        [JsonInclude] public bool   Visible { get; set; } = true;
+    }
+
+    internal class MetadataSettings
+    {
+        [JsonInclude] public List<MetadataFieldConfig> Fields { get; set; } = new();
     }
 
     // ═══════════════════════════════════════════════════
