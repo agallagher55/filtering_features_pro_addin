@@ -56,6 +56,7 @@ namespace ProAppAddInSdeSearch
         private ObservableCollection<FieldInfo> _detailFields = new ObservableCollection<FieldInfo>();
         private string _detailMetadata = "";
         private bool _isLoadingDetails;
+        private bool _detailAccessError;
 
         // ── Filters ───────────────────────────────────
         private bool _showFeatureClasses = true;
@@ -227,6 +228,12 @@ namespace ProAppAddInSdeSearch
         {
             get => _isLoadingDetails;
             set => SetProperty(ref _isLoadingDetails, value);
+        }
+
+        public bool DetailAccessError
+        {
+            get => _detailAccessError;
+            set => SetProperty(ref _detailAccessError, value);
         }
 
         public bool ShowFeatureClasses
@@ -829,6 +836,7 @@ namespace ProAppAddInSdeSearch
             {
                 DetailFields.Clear();
                 DetailMetadata = "Loading...";
+                DetailAccessError = false;
             });
 
             await QueuedTask.Run(() =>
@@ -887,6 +895,7 @@ namespace ProAppAddInSdeSearch
                 {
                     System.Diagnostics.Debug.WriteLine($"Detail load error: {ex.Message}");
                     // fields remains empty — connection failure, nothing to fall back to
+                    RunOnUI(() => DetailAccessError = true);
                 }
 
                 var meta = BuildMetadataDisplay(item);
