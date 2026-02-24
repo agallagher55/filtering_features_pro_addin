@@ -58,6 +58,17 @@ namespace ProAppAddInSdeSearch
         private bool _isLoadingDetails;
         private bool _detailAccessError;
 
+        // ── Seed cache info panel ─────────────────────
+        private bool _showSeedCacheInfo;
+        private bool _isUsingSeedCache;
+        private string _seedCacheConnectionPath = "";
+        private string _seedCacheCachedAt = "";
+        private string _seedCacheSummary = "";
+
+        // ── Determinate progress ──────────────────────
+        private int _progressValue;
+        private int _progressMax;
+
         // ── Filters ───────────────────────────────────
         private bool _showFeatureClasses = true;
         private bool _showTables = true;
@@ -81,7 +92,8 @@ namespace ProAppAddInSdeSearch
             RefreshConnectionsCommand = new RelayCommand(() => _ = LoadConnections(), () => !IsSearching);
             ReloadDataCommand = new RelayCommand(() => _ = LoadAllDatasets(forceRefresh: true), () => !IsSearching && SelectedConnection != null);
             AddToMapCommand = new RelayCommand(() => _ = AddSelectedToMap(), () => SelectedResult != null && SelectedResult.CanAddToMap);
-            BackToResultsCommand = new RelayCommand(() => ShowDetails = false, () => ShowDetails);
+            BackToResultsCommand = new RelayCommand(() => { ShowDetails = false; ShowSeedCacheInfo = false; }, () => ShowDetails || ShowSeedCacheInfo);
+            ShowSeedCacheInfoCommand = new RelayCommand(() => ShowSeedCacheInfo = true);
             CopyPathCommand = new RelayCommand(() => CopySelectedPath(), () => SelectedResult != null);
             BrowseSdeCommand = new RelayCommand(() => BrowseForSdeFile(), () => !IsSearching);
             AddManualPathCommand = new RelayCommand(() => AddManualSdePath(), () => !IsSearching && !string.IsNullOrWhiteSpace(ManualSdePath));
@@ -95,6 +107,7 @@ namespace ProAppAddInSdeSearch
         public ICommand ReloadDataCommand { get; }
         public ICommand AddToMapCommand { get; }
         public ICommand BackToResultsCommand { get; }
+        public ICommand ShowSeedCacheInfoCommand { get; }
         public ICommand CopyPathCommand { get; }
         public ICommand BrowseSdeCommand { get; }
         public ICommand AddManualPathCommand { get; }
@@ -210,7 +223,7 @@ namespace ProAppAddInSdeSearch
             set { if (SetProperty(ref _showDetails, value)) NotifyPropertyChanged(nameof(ShowResultsList)); }
         }
 
-        public bool ShowResultsList => !ShowDetails;
+        public bool ShowResultsList => !ShowDetails && !ShowSeedCacheInfo;
 
         public ObservableCollection<FieldInfo> DetailFields
         {
@@ -235,6 +248,51 @@ namespace ProAppAddInSdeSearch
             get => _detailAccessError;
             set => SetProperty(ref _detailAccessError, value);
         }
+
+        public bool ShowSeedCacheInfo
+        {
+            get => _showSeedCacheInfo;
+            set { if (SetProperty(ref _showSeedCacheInfo, value)) NotifyPropertyChanged(nameof(ShowResultsList)); }
+        }
+
+        public bool IsUsingSeedCache
+        {
+            get => _isUsingSeedCache;
+            set => SetProperty(ref _isUsingSeedCache, value);
+        }
+
+        public string SeedCacheConnectionPath
+        {
+            get => _seedCacheConnectionPath;
+            set => SetProperty(ref _seedCacheConnectionPath, value);
+        }
+
+        public string SeedCacheCachedAt
+        {
+            get => _seedCacheCachedAt;
+            set => SetProperty(ref _seedCacheCachedAt, value);
+        }
+
+        public string SeedCacheSummary
+        {
+            get => _seedCacheSummary;
+            set => SetProperty(ref _seedCacheSummary, value);
+        }
+
+        public int ProgressValue
+        {
+            get => _progressValue;
+            set => SetProperty(ref _progressValue, value);
+        }
+
+        public int ProgressMax
+        {
+            get => _progressMax;
+            set { if (SetProperty(ref _progressMax, value)) NotifyPropertyChanged(nameof(IsProgressDeterminate)); }
+        }
+
+        public bool IsProgressDeterminate => _progressMax > 0;
+
 
         public bool ShowFeatureClasses
         {
@@ -457,6 +515,24 @@ namespace ProAppAddInSdeSearch
                         cacheInfo = $"cached {cacheAge}";
                     }
 
+                    if (usedSeedCache)
+                    {
+                        var (seedConn, seedDate, seedFCs, seedTbls, seedFDs, seedRels) = SdeSearchCache.GetSeedCacheInfo();
+                        RunOnUI(() =>
+                        {
+                            IsUsingSeedCache = true;
+                            SeedCacheConnectionPath = string.IsNullOrEmpty(seedConn) ? "(not recorded)" : seedConn;
+                            SeedCacheCachedAt = seedDate.HasValue
+                                ? seedDate.Value.ToLocalTime().ToString("yyyy-MM-dd  HH:mm")
+                                : "(unknown)";
+                            SeedCacheSummary = $"Feature Classes:        {seedFCs}\nTables:                     {seedTbls}\nFeature Datasets:       {seedFDs}\nRelationship Classes:  {seedRels}\n\nTotal:  {seedFCs + seedTbls + seedFDs + seedRels}";
+                        });
+                    }
+                    else
+                    {
+                        RunOnUI(() => IsUsingSeedCache = false);
+                    }
+
                     RunOnUI(() =>
                     {
                         ApplyFilterAndSearch();
@@ -468,6 +544,7 @@ namespace ProAppAddInSdeSearch
                 }
             }
 
+            RunOnUI(() => { IsUsingSeedCache = false; ProgressMax = 0; ProgressValue = 0; });
             ReportProgress("Connecting to " + connName + "...");
             ReportStatus("Connecting...");
 
@@ -481,13 +558,24 @@ namespace ProAppAddInSdeSearch
                         // concurrent LoadAllDatasets call clears _allDatasets.
                         var localDatasets = new List<SdeDatasetItem>();
                         int total = 0;
+                        int processed = 0;
+
+                        // Pre-fetch all definition lists so the total is known upfront
+                        // and the progress bar can show a real fraction instead of spinning.
+                        ReportProgress("Counting datasets...");
+                        var allFDDefs  = gdb.GetDefinitions<FeatureDatasetDefinition>().ToList();
+                        var allFCDefs  = gdb.GetDefinitions<FeatureClassDefinition>().ToList();
+                        var allTblDefs = gdb.GetDefinitions<TableDefinition>().ToList();
+                        var allRelDefs = gdb.GetDefinitions<RelationshipClassDefinition>().ToList();
+                        int totalExpected = allFDDefs.Count + allFCDefs.Count + allTblDefs.Count + allRelDefs.Count;
+                        RunOnUI(() => { ProgressMax = totalExpected; ProgressValue = 0; });
 
                         // ── Feature Datasets + their contained feature classes ─────────────────────
-                        ReportProgress("Enumerating feature datasets...");
+                        ReportProgress($"Feature Datasets: 0 / {allFDDefs.Count}...");
                         var featureDatasetMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                         try
                         {
-                            foreach (var def in gdb.GetDefinitions<FeatureDatasetDefinition>())
+                            foreach (var def in allFDDefs)
                             {
                                 try
                                 {
@@ -509,6 +597,8 @@ namespace ProAppAddInSdeSearch
 
                                     localDatasets.Add(item);
                                     total++;
+                                    processed++;
+                                    { int snap = processed; RunOnUI(() => ProgressValue = snap); }
 
                                     // Enumerate datasets within this feature dataset
                                     try
@@ -535,13 +625,13 @@ namespace ProAppAddInSdeSearch
                         }
                         catch { }
 
-                        ReportProgress($"{total} feature dataset(s). Enumerating feature classes...");
+                        ReportProgress($"Feature Datasets: {allFDDefs.Count} / {allFDDefs.Count}. Loading feature classes...");
 
                         // ── Feature Classes (FAST: skip field count) ─
                         try
                         {
                             int fc = 0;
-                            foreach (var def in gdb.GetDefinitions<FeatureClassDefinition>())
+                            foreach (var def in allFCDefs)
                             {
                                 try
                                 {
@@ -582,15 +672,20 @@ namespace ProAppAddInSdeSearch
                                     BuildSearchTexts(item);
 
                                     localDatasets.Add(item);
-                                    total++; fc++;
-                                    if (fc % 50 == 0) ReportProgress($"{total} items ({fc} feature classes)...");
+                                    total++; fc++; processed++;
+                                    if (fc % 10 == 0)
+                                    {
+                                        int snap = processed;
+                                        RunOnUI(() => ProgressValue = snap);
+                                        ReportProgress($"Feature Classes: {fc} / {allFCDefs.Count}");
+                                    }
                                 }
                                 catch { }
                             }
                         }
                         catch { }
 
-                        ReportProgress($"{total} items. Enumerating tables...");
+                        ReportProgress($"Feature Classes: {allFCDefs.Count} / {allFCDefs.Count}. Loading tables...");
 
                         // ── Tables ───────────────────────────────
                         try
@@ -600,7 +695,7 @@ namespace ProAppAddInSdeSearch
                                 StringComparer.OrdinalIgnoreCase);
 
                             int tc = 0;
-                            foreach (var def in gdb.GetDefinitions<TableDefinition>())
+                            foreach (var def in allTblDefs)
                             {
                                 try
                                 {
@@ -628,8 +723,13 @@ namespace ProAppAddInSdeSearch
                                     BuildSearchTexts(item);
 
                                     localDatasets.Add(item);
-                                    total++; tc++;
-                                    if (tc % 50 == 0) ReportProgress($"{total} items ({tc} tables)...");
+                                    total++; tc++; processed++;
+                                    if (tc % 10 == 0)
+                                    {
+                                        int snap = processed;
+                                        RunOnUI(() => ProgressValue = snap);
+                                        ReportProgress($"Tables: {tc} / {allTblDefs.Count}");
+                                    }
                                 }
                                 catch { }
                             }
@@ -637,10 +737,10 @@ namespace ProAppAddInSdeSearch
                         catch { }
 
                         // ── Relationship Classes ─────────────────
-                        ReportProgress($"{total} items. Enumerating relationships...");
+                        ReportProgress($"Tables: {total - allFCDefs.Count - allFDDefs.Count} / {allTblDefs.Count}. Loading relationships...");
                         try
                         {
-                            foreach (var def in gdb.GetDefinitions<RelationshipClassDefinition>())
+                            foreach (var def in allRelDefs)
                             {
                                 try
                                 {
@@ -656,7 +756,7 @@ namespace ProAppAddInSdeSearch
                                     };
                                     BuildSearchTexts(relItem);
                                     localDatasets.Add(relItem);
-                                    total++;
+                                    total++; processed++;
                                 }
                                 catch { }
                             }
@@ -698,6 +798,8 @@ namespace ProAppAddInSdeSearch
                             ApplyFilterAndSearch();
                             IsSearching = false;
                             ProgressText = "";
+                            ProgressMax = 0;
+                            ProgressValue = 0;
                             StatusText = $"{connName} (just refreshed): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
                         });
                     }
@@ -1709,6 +1811,26 @@ namespace ProAppAddInSdeSearch
             {
                 return null;
             }
+        }
+
+        /// <summary>Returns the ConnectionPath, CachedAt, and per-type counts stored in the bundled SeedCache.json.</summary>
+        public static (string ConnectionPath, DateTime? CachedAt, int FCs, int Tables, int FDs, int Rels) GetSeedCacheInfo()
+        {
+            try
+            {
+                var seedFile = GetSeedCacheFile();
+                if (string.IsNullOrEmpty(seedFile) || !File.Exists(seedFile))
+                    return (null, null, 0, 0, 0, 0);
+                var json = File.ReadAllText(seedFile);
+                var wrapper = JsonSerializer.Deserialize<CacheWrapper>(json);
+                if (wrapper?.Datasets == null) return (null, null, 0, 0, 0, 0);
+                int fcs   = wrapper.Datasets.Count(d => d.DatasetType == "Feature Class");
+                int tbls  = wrapper.Datasets.Count(d => d.DatasetType == "Table");
+                int fds   = wrapper.Datasets.Count(d => d.DatasetType == "Feature Dataset");
+                int rels  = wrapper.Datasets.Count(d => d.DatasetType == "Relationship Class");
+                return (wrapper.ConnectionPath, wrapper.CachedAt, fcs, tbls, fds, rels);
+            }
+            catch { return (null, null, 0, 0, 0, 0); }
         }
 
         // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)

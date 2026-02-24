@@ -285,8 +285,11 @@
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                 Visibility="{Binding IsSearching, Converter={StaticResource BoolToVis}}">
             <StackPanel>
-                <ProgressBar IsIndeterminate="True" Height="3" Foreground="{DynamicResource Accent}" 
-                             Background="{DynamicResource BorderBrush}" BorderThickness="0" Margin="0,0,0,6"/>
+                <ProgressBar Height="3" Foreground="{DynamicResource Accent}"
+                             Background="{DynamicResource BorderBrush}" BorderThickness="0" Margin="0,0,0,6"
+                             IsIndeterminate="{Binding IsProgressDeterminate, Converter={StaticResource InverseBool}}"
+                             Value="{Binding ProgressValue}"
+                             Maximum="{Binding ProgressMax, FallbackValue=100}"/>
                 <TextBlock Text="{Binding ProgressText}" FontSize="11" Foreground="{DynamicResource AccentLight}" TextWrapping="Wrap"/>
             </StackPanel>
         </Border>
@@ -415,6 +418,65 @@
                 </ListView>
             
             <!-- ── DETAIL VIEW ── -->
+            <!-- ── SEED CACHE INFO ── -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ShowSeedCacheInfo, Converter={StaticResource BoolToVis}}">
+                <StackPanel>
+                    <!-- Header -->
+                    <Border Background="{DynamicResource FieldBg}" Padding="12,10"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button Grid.Column="0" Command="{Binding BackToResultsCommand}"
+                                    Style="{StaticResource SecBtn}" Margin="0,0,8,0" Padding="8,4">
+                                <TextBlock Text="◀ Back" FontSize="11"/>
+                            </Button>
+                            <TextBlock Grid.Column="1" Text="SEED CACHE INFO" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+                    <!-- Generated from -->
+                    <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="GENERATED FROM" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                    </Border>
+                    <Border Background="{DynamicResource PanelBg}" Padding="12,8"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="{Binding SeedCacheConnectionPath}" Foreground="{DynamicResource PrimaryText}"
+                                   FontSize="11" TextWrapping="Wrap"/>
+                    </Border>
+                    <!-- Generated on -->
+                    <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="GENERATED ON" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                    </Border>
+                    <Border Background="{DynamicResource PanelBg}" Padding="12,8"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="{Binding SeedCacheCachedAt}" Foreground="{DynamicResource PrimaryText}" FontSize="11"/>
+                    </Border>
+                    <!-- Contents -->
+                    <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="CONTENTS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                    </Border>
+                    <Border Background="{DynamicResource PanelBg}" Padding="12,8"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Text="{Binding SeedCacheSummary}" Foreground="{DynamicResource PrimaryText}"
+                                   FontSize="11" LineHeight="20"/>
+                    </Border>
+                    <!-- Notice -->
+                    <Border Background="{DynamicResource PanelBg}" Padding="12,10" Margin="0,1,0,0"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                        <TextBlock Foreground="{DynamicResource AccentLight}" FontSize="11" TextWrapping="Wrap">
+                            This is template data. Click &#x21BB; next to the connection selector to reload from your own database.
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
             <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding ShowDetails, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <!-- Header -->
@@ -548,11 +610,19 @@
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="{Binding StatusText}" FontSize="11" 
+                <TextBlock Grid.Column="0" Text="{Binding StatusText}" FontSize="11"
                            Foreground="{DynamicResource SecondaryText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-                <TextBlock Grid.Column="1" FontSize="11" Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center" Margin="8,0,0,0">
+                <Button Grid.Column="1" Command="{Binding ShowSeedCacheInfoCommand}"
+                        Style="{StaticResource SecBtn}" Padding="6,2" Margin="6,0,0,0"
+                        Visibility="{Binding IsUsingSeedCache, Converter={StaticResource BoolToVis}}"
+                        ToolTip="View seed cache information">
+                    <TextBlock Text="ℹ" FontSize="12" Foreground="{DynamicResource Accent}"/>
+                </Button>
+                <TextBlock Grid.Column="2" FontSize="11" Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center" Margin="8,0,0,0">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Setter Property="Text" Value="{Binding ResultCount, StringFormat='{}{0} items'}"/>
