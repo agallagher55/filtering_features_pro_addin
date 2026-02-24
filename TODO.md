@@ -6,6 +6,7 @@
 # Plan for group deployment and then HRM deployment
 - [ ] Create deployment.md file. Consider how add-in updates will be given.
 
+# Add an info. icon button at the bottom of the main window that opens to the cache data
 # Add some fine print in the main header that says when the last time the add-in was updated/installed
 # Optimization
 ## Clean up cache folder of json files
@@ -79,6 +80,7 @@ Show when caching started and ended.
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
