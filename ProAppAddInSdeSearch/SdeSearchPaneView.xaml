@@ -466,6 +466,16 @@
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                         <TextBlock Text="FIELDS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
                     </Border>
+                    <Border Padding="12,8" Margin="0,0,0,1"
+                            Background="{DynamicResource FieldBg}"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                            Visibility="{Binding DetailAccessError, Converter={StaticResource BoolToVis}}">
+                        <TextBlock FontSize="11" TextWrapping="Wrap" LineHeight="18"
+                                   Foreground="{DynamicResource Accent}">
+                            Could not load fields — this item may not be accessible with your current connection.
+                            Click &#x21BB; to rebuild your cache from your own database.
+                        </TextBlock>
+                    </Border>
                     <ItemsControl ItemsSource="{Binding DetailFields}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
