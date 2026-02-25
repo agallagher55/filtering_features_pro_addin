@@ -15,7 +15,6 @@
 
 
 # New Functionality
-## Filter by geometry type
 ## Use of wildcards in search
 ## CREATE MetadataSettings.json md file
 ## Remove html tags from metadata
@@ -75,6 +74,7 @@ Show when caching started and ended.
 ### Create window for cache information
 - [ ] Show last updated
 - [ ] From what connection the cache was generated from
+
 
 
 
