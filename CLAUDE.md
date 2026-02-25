@@ -22,6 +22,7 @@ This file documents the codebase structure, development conventions, and key wor
 filtering_features_pro_addin/
 ├── ProAppAddInSdeSearch.sln                  # Visual Studio solution
 ├── README.md                                 # End-user documentation
+├── RELEASE_NOTES.md                          # User-facing changelog (update with every feature/fix)
 ├── SEED_CACHE.md                             # Seed cache deployment guide
 ├── TODO.md                                   # Active feature backlog
 ├── BUGS.md                                   # Known bugs (currently empty)
@@ -301,3 +302,16 @@ Open items as of the last README update:
 - Claude-generated feature branches follow the pattern: `claude/<session-id>`
 - Changes are developed on feature branches and merged to `master` via pull requests
 - No CI/CD pipeline — builds and testing are manual
+
+---
+
+## Release Notes
+
+**Always update `RELEASE_NOTES.md` when completing a task that adds, changes, or fixes user-visible behaviour.**
+
+- Add a new dated section at the top of the file for the current date if one does not already exist
+- Write entries from the user's perspective — what changed and why it matters, not implementation details
+- Group related changes under a short heading (e.g. `### Dynamic item-type dropdown filter`)
+- Minor internal refactors, documentation-only commits, and seed cache data updates do not need entries
+- Keep entries concise — two to five bullet points per feature is typical
+
