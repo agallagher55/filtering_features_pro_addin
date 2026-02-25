@@ -256,16 +256,22 @@
             </StackPanel>
         </Border>
 
-        <!-- ═══ FILTERS ═══ -->
+        <!-- ═══ ITEM TYPE FILTER ═══ -->
         <Border Grid.Row="3" Background="{DynamicResource FieldBg}" Padding="12,6"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-            <WrapPanel>
-                <TextBlock Text="Show:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="Type:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <CheckBox Content="Feature Classes" IsChecked="{Binding ShowFeatureClasses}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Tables" IsChecked="{Binding ShowTables}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Feature Datasets" IsChecked="{Binding ShowFeatureDatasets}" Style="{StaticResource ThemedCheckBox}"/>
-            </WrapPanel>
+                <ComboBox Grid.Column="1"
+                          ItemsSource="{Binding AvailableItemTypes}"
+                          SelectedItem="{Binding SelectedItemType, Mode=TwoWay}"
+                          Style="{StaticResource ThemedComboBox}"
+                          MinHeight="26"/>
+            </Grid>
         </Border>
 
         <!-- ═══ TAG FILTERS ═══ -->
