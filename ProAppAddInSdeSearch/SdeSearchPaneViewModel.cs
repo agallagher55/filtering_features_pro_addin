@@ -69,10 +69,9 @@ namespace ProAppAddInSdeSearch
         private int _progressValue;
         private int _progressMax;
 
-        // ── Filters ───────────────────────────────────
-        private bool _showFeatureClasses = true;
-        private bool _showTables = true;
-        private bool _showFeatureDatasets = true;
+        // ── Item type dropdown ────────────────────────
+        private ObservableCollection<ItemTypeOption> _availableItemTypes = new();
+        private ItemTypeOption _selectedItemType;
 
         // ── Tag filters (when checked, only show items with that tag) ──
         private bool _filterEditorTracking;
@@ -294,22 +293,16 @@ namespace ProAppAddInSdeSearch
         public bool IsProgressDeterminate => _progressMax > 0;
 
 
-        public bool ShowFeatureClasses
+        public ObservableCollection<ItemTypeOption> AvailableItemTypes
         {
-            get => _showFeatureClasses;
-            set { if (SetProperty(ref _showFeatureClasses, value)) ApplyFilterAndSearch(); }
+            get => _availableItemTypes;
+            set => SetProperty(ref _availableItemTypes, value);
         }
 
-        public bool ShowTables
+        public ItemTypeOption SelectedItemType
         {
-            get => _showTables;
-            set { if (SetProperty(ref _showTables, value)) ApplyFilterAndSearch(); }
-        }
-
-        public bool ShowFeatureDatasets
-        {
-            get => _showFeatureDatasets;
-            set { if (SetProperty(ref _showFeatureDatasets, value)) ApplyFilterAndSearch(); }
+            get => _selectedItemType;
+            set { if (SetProperty(ref _selectedItemType, value)) ApplyFilterAndSearch(); }
         }
 
         public bool FilterEditorTracking
@@ -533,9 +526,10 @@ namespace ProAppAddInSdeSearch
                         RunOnUI(() => IsUsingSeedCache = false);
                     }
 
+                    // BuildAvailableItemTypes sets SelectedItemType which triggers ApplyFilterAndSearch
+                    BuildAvailableItemTypes();
                     RunOnUI(() =>
                     {
-                        ApplyFilterAndSearch();
                         IsSearching = false;
                         ProgressText = "";
                         StatusText = $"{connName} ({cacheInfo}): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
@@ -793,9 +787,10 @@ namespace ProAppAddInSdeSearch
                         int fds = localDatasets.Count(d => d.DatasetType == "Feature Dataset");
                         int rels = localDatasets.Count(d => d.DatasetType == "Relationship Class");
 
+                        // BuildAvailableItemTypes sets SelectedItemType which triggers ApplyFilterAndSearch
+                        BuildAvailableItemTypes();
                         RunOnUI(() =>
                         {
-                            ApplyFilterAndSearch();
                             IsSearching = false;
                             ProgressText = "";
                             ProgressMax = 0;
@@ -836,6 +831,46 @@ namespace ProAppAddInSdeSearch
 
         #region Filter
 
+        private void BuildAvailableItemTypes()
+        {
+            var types = _allDatasets
+                .GroupBy(d => d.GeometryIconType ?? "Unknown")
+                .OrderBy(g => TypeSortOrder(g.Key))
+                .Select(g => new ItemTypeOption
+                {
+                    Key = g.Key,
+                    Display = $"{TypeDisplayName(g.Key)} ({g.Count()})"
+                })
+                .ToList();
+
+            types.Insert(0, new ItemTypeOption
+            {
+                Key = "All",
+                Display = $"All ({_allDatasets.Count})"
+            });
+
+            RunOnUI(() =>
+            {
+                AvailableItemTypes.Clear();
+                foreach (var t in types) AvailableItemTypes.Add(t);
+                // Setting SelectedItemType triggers ApplyFilterAndSearch via its setter
+                SelectedItemType = AvailableItemTypes.FirstOrDefault();
+            });
+        }
+
+        private static string TypeDisplayName(string iconType) => iconType switch
+        {
+            "Dataset" => "Feature Dataset",
+            "Relationship" => "Relationship",
+            _ => iconType
+        };
+
+        private static int TypeSortOrder(string iconType) => iconType switch
+        {
+            "Point" => 0, "Polyline" => 1, "Polygon" => 2, "Multipatch" => 3,
+            "Table" => 4, "Dataset" => 5, "Relationship" => 6, _ => 7
+        };
+
         private void ApplyFilterAndSearch()
         {
             // Auto-exit detail view so the user sees updated results immediately
@@ -858,9 +893,7 @@ namespace ProAppAddInSdeSearch
             bool byName = _searchByName;
             bool byMeta = _searchByMetadata;
             bool byTags = _searchByTags;
-            bool showFc  = _showFeatureClasses;
-            bool showTbl = _showTables;
-            bool showFds = _showFeatureDatasets;
+            string typeFilter = _selectedItemType?.Key ?? "All";
             bool filtET  = _filterEditorTracking;
             bool filtArch = _filterArchiving;
             bool filtSub  = _filterSubtypes;
@@ -870,9 +903,7 @@ namespace ProAppAddInSdeSearch
             {
                 var filtered = datasets.Where(item =>
                 {
-                    if (!showFc  && item.DatasetType == "Feature Class") return false;
-                    if (!showTbl && item.DatasetType == "Table") return false;
-                    if (!showFds && item.DatasetType == "Feature Dataset") return false;
+                    if (typeFilter != "All" && item.GeometryIconType != typeFilter) return false;
 
                     if (filtET   && !item.HasEditorTracking) return false;
                     if (filtArch && !item.IsArchived) return false;
@@ -2047,6 +2078,17 @@ namespace ProAppAddInSdeSearch
     internal class MetadataSettings
     {
         [JsonInclude] public List<MetadataFieldConfig> Fields { get; set; } = new();
+    }
+
+    // ═══════════════════════════════════════════════════
+    //  ITEM TYPE FILTER OPTION
+    // ═══════════════════════════════════════════════════
+
+    internal class ItemTypeOption
+    {
+        public string Key { get; set; }      // GeometryIconType value, or "All"
+        public string Display { get; set; }  // "All (500)", "Polygon (200)"
+        public override string ToString() => Display;
     }
 
     // ═══════════════════════════════════════════════════
