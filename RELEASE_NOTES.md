@@ -7,6 +7,9 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ## 2026-02-25
 
+### Add-in startup information dialog
+- Fixed the ArcGIS Pro add-in information dialog showing no name on startup — the DAML `<Name>` element was incorrectly written as `<n>`, causing ArcGIS Pro to silently ignore it
+
 ### Cache info panel and add-in footer
 - The **ⓘ** button (now a filled circle-i icon) in the status bar is visible whenever a cache is loaded — not only when template data is in use
 - Clicking it opens a **Cache Info** panel showing where the cache was generated from (connection file path) and when it was last cached, plus a dataset count breakdown
