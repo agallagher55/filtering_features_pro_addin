@@ -314,4 +314,3 @@ Open items as of the last README update:
 - Group related changes under a short heading (e.g. `### Dynamic item-type dropdown filter`)
 - Minor internal refactors, documentation-only commits, and seed cache data updates do not need entries
 - Keep entries concise — two to five bullet points per feature is typical
-
