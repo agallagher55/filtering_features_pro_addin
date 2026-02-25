@@ -153,6 +153,7 @@
             <RowDefinition Height="Auto"/><!-- progress -->
             <RowDefinition Height="*"/>  <!-- content -->
             <RowDefinition Height="Auto"/><!-- status -->
+            <RowDefinition Height="Auto"/><!-- fine print -->
         </Grid.RowDefinitions>
 
         <!-- ═══ HEADER ═══ -->
@@ -423,8 +424,7 @@
                     </ListView.ItemTemplate>
                 </ListView>
             
-            <!-- ── DETAIL VIEW ── -->
-            <!-- ── SEED CACHE INFO ── -->
+            <!-- ── CACHE INFO PANEL ── -->
             <ScrollViewer VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding ShowSeedCacheInfo, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
@@ -440,28 +440,28 @@
                                     Style="{StaticResource SecBtn}" Margin="0,0,8,0" Padding="8,4">
                                 <TextBlock Text="◀ Back" FontSize="11"/>
                             </Button>
-                            <TextBlock Grid.Column="1" Text="SEED CACHE INFO" FontSize="10" FontWeight="SemiBold"
+                            <TextBlock Grid.Column="1" Text="{Binding CacheInfoTitle}" FontSize="10" FontWeight="SemiBold"
                                        Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
-                    <!-- Generated from -->
+                    <!-- From (connection path / sde file) -->
                     <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="GENERATED FROM" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                        <TextBlock Text="{Binding CacheFromLabel}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
                     </Border>
                     <Border Background="{DynamicResource PanelBg}" Padding="12,8"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="{Binding SeedCacheConnectionPath}" Foreground="{DynamicResource PrimaryText}"
+                        <TextBlock Text="{Binding CacheFromValue}" Foreground="{DynamicResource PrimaryText}"
                                    FontSize="11" TextWrapping="Wrap"/>
                     </Border>
-                    <!-- Generated on -->
+                    <!-- Date (generated on / last cached) -->
                     <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="GENERATED ON" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                        <TextBlock Text="{Binding CacheDateLabel}" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
                     </Border>
                     <Border Background="{DynamicResource PanelBg}" Padding="12,8"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="{Binding SeedCacheCachedAt}" Foreground="{DynamicResource PrimaryText}" FontSize="11"/>
+                        <TextBlock Text="{Binding CacheDateValue}" Foreground="{DynamicResource PrimaryText}" FontSize="11"/>
                     </Border>
                     <!-- Contents -->
                     <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
@@ -470,12 +470,18 @@
                     </Border>
                     <Border Background="{DynamicResource PanelBg}" Padding="12,8"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="{Binding SeedCacheSummary}" Foreground="{DynamicResource PrimaryText}"
+                        <TextBlock Text="{Binding CacheContentsSummary}" Foreground="{DynamicResource PrimaryText}"
                                    FontSize="11" LineHeight="20"/>
                     </Border>
-                    <!-- Notice -->
-                    <Border Background="{DynamicResource PanelBg}" Padding="12,10" Margin="0,1,0,0"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+                    <!-- Template-data notice — only for seed cache -->
+                    <Border Padding="12,10" Margin="0,1,0,0"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                            Visibility="{Binding IsUsingSeedCache, Converter={StaticResource BoolToVis}}">
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="{DynamicResource FieldBg}"/>
+                            </Style>
+                        </Border.Style>
                         <TextBlock Foreground="{DynamicResource AccentLight}" FontSize="11" TextWrapping="Wrap">
                             This is template data. Click &#x21BB; next to the connection selector to reload from your own database.
                         </TextBlock>
@@ -612,7 +618,7 @@
         </Grid>
 
         <!-- ═══ STATUS BAR ═══ -->
-        <Border Grid.Row="7" Background="{DynamicResource FieldBg}" Padding="12,6"
+        <Border Grid.Row="7" Background="{DynamicResource FieldBg}" Padding="12,5"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -623,10 +629,17 @@
                 <TextBlock Grid.Column="0" Text="{Binding StatusText}" FontSize="11"
                            Foreground="{DynamicResource SecondaryText}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
                 <Button Grid.Column="1" Command="{Binding ShowSeedCacheInfoCommand}"
-                        Style="{StaticResource SecBtn}" Padding="6,2" Margin="6,0,0,0"
-                        Visibility="{Binding IsUsingSeedCache, Converter={StaticResource BoolToVis}}"
-                        ToolTip="View seed cache information">
-                    <TextBlock Text="ℹ" FontSize="12" Foreground="{DynamicResource Accent}"/>
+                        Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        Padding="4,2" Margin="6,0,0,0"
+                        Visibility="{Binding HasCacheInfo, Converter={StaticResource BoolToVis}}"
+                        ToolTip="View cache information">
+                    <!-- Circle-i icon -->
+                    <Viewbox Width="14" Height="14">
+                        <Canvas Width="24" Height="24">
+                            <Path Fill="{DynamicResource Accent}"
+                                  Data="M12,2 C6.48,2 2,6.48 2,12 C2,17.52 6.48,22 12,22 C17.52,22 22,17.52 22,12 C22,6.48 17.52,2 12,2 Z M13,17 L11,17 L11,11 L13,11 L13,17 Z M13,9 L11,9 L11,7 L13,7 L13,9 Z"/>
+                        </Canvas>
+                    </Viewbox>
                 </Button>
                 <TextBlock Grid.Column="2" FontSize="11" Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center" Margin="8,0,0,0">
                     <TextBlock.Style>
@@ -639,6 +652,15 @@
                     </TextBlock.Style>
                 </TextBlock>
             </Grid>
+        </Border>
+        <!-- ═══ FINE PRINT ═══ -->
+        <Border Grid.Row="8" Background="{DynamicResource PanelBg}" Padding="12,4,12,5"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+            <TextBlock FontSize="9" Foreground="{DynamicResource SecondaryText}" Opacity="0.6"
+                       TextTrimming="CharacterEllipsis">
+                <Run Text="SDE Search ·"/>
+                <Run Text="{Binding AddinInstallDate, StringFormat='installed {0}'}"/>
+            </TextBlock>
         </Border>
     </Grid>
 </UserControl>

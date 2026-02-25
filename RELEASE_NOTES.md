@@ -7,6 +7,12 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ## 2026-02-25
 
+### Cache info panel and add-in footer
+- The **ⓘ** button (now a filled circle-i icon) in the status bar is visible whenever a cache is loaded — not only when template data is in use
+- Clicking it opens a **Cache Info** panel showing where the cache was generated from (connection file path) and when it was last cached, plus a dataset count breakdown
+- For template/seed caches the panel still notes that the data is pre-generated and provides guidance to refresh
+- A fine-print footer at the bottom of the pane shows when the add-in was installed on the current machine
+
 ### Dynamic item-type dropdown filter
 - Replaced the "Show:" checkboxes (Feature Classes / Tables / Feature Datasets) with a **Type** dropdown populated dynamically from the types actually present in the loaded connection
 - Each option shows the type name and count (e.g. `Polygon (142)`, `Table (38)`, `All (500)`)

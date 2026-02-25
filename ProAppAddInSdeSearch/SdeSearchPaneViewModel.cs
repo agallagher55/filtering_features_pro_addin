@@ -257,7 +257,54 @@ namespace ProAppAddInSdeSearch
         public bool IsUsingSeedCache
         {
             get => _isUsingSeedCache;
-            set => SetProperty(ref _isUsingSeedCache, value);
+            set { if (SetProperty(ref _isUsingSeedCache, value)) NotifyPropertyChanged(nameof(HasCacheInfo)); }
+        }
+
+        /// <summary>True when any cache (seed or user-generated) has been loaded for the current connection.</summary>
+        public bool HasCacheInfo => _isUsingSeedCache || _cacheTimestamp.HasValue;
+
+        // ── Computed cache info panel properties (drive both seed and user cache views) ──
+
+        public string CacheInfoTitle => _isUsingSeedCache ? "TEMPLATE CACHE INFO" : "CACHE INFO";
+
+        public string CacheFromLabel => _isUsingSeedCache ? "GENERATED FROM" : "CACHED FROM";
+
+        public string CacheFromValue => _isUsingSeedCache
+            ? (_seedCacheConnectionPath.Length > 0 ? _seedCacheConnectionPath : "(not recorded)")
+            : (_selectedConnection?.Path ?? "(unknown)");
+
+        public string CacheDateLabel => _isUsingSeedCache ? "GENERATED ON" : "LAST CACHED";
+
+        public string CacheDateValue => _isUsingSeedCache
+            ? (_seedCacheCachedAt.Length > 0 ? _seedCacheCachedAt : "(unknown)")
+            : (_cacheTimestamp.HasValue ? _cacheTimestamp.Value.ToLocalTime().ToString("yyyy-MM-dd  HH:mm") : "(unknown)");
+
+        public string CacheContentsSummary
+        {
+            get
+            {
+                if (_isUsingSeedCache) return _seedCacheSummary;
+                if (_allDatasets.Count == 0) return "";
+                int fcs  = _allDatasets.Count(d => d.DatasetType == "Feature Class");
+                int tbls = _allDatasets.Count(d => d.DatasetType == "Table");
+                int fds  = _allDatasets.Count(d => d.DatasetType == "Feature Dataset");
+                int rels = _allDatasets.Count(d => d.DatasetType == "Relationship Class");
+                return $"Feature Classes:        {fcs}\nTables:                     {tbls}\nFeature Datasets:       {fds}\nRelationship Classes:  {rels}\n\nTotal:  {fcs + tbls + fds + rels}";
+            }
+        }
+
+        public string AddinInstallDate
+        {
+            get
+            {
+                try
+                {
+                    var loc = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                    var dt  = File.GetCreationTime(loc);
+                    return dt > DateTime.MinValue ? dt.ToString("yyyy-MM-dd") : "";
+                }
+                catch { return ""; }
+            }
         }
 
         public string SeedCacheConnectionPath
@@ -530,6 +577,13 @@ namespace ProAppAddInSdeSearch
                     BuildAvailableItemTypes();
                     RunOnUI(() =>
                     {
+                        NotifyPropertyChanged(nameof(HasCacheInfo));
+                        NotifyPropertyChanged(nameof(CacheInfoTitle));
+                        NotifyPropertyChanged(nameof(CacheFromLabel));
+                        NotifyPropertyChanged(nameof(CacheFromValue));
+                        NotifyPropertyChanged(nameof(CacheDateLabel));
+                        NotifyPropertyChanged(nameof(CacheDateValue));
+                        NotifyPropertyChanged(nameof(CacheContentsSummary));
                         IsSearching = false;
                         ProgressText = "";
                         StatusText = $"{connName} ({cacheInfo}): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
@@ -791,6 +845,13 @@ namespace ProAppAddInSdeSearch
                         BuildAvailableItemTypes();
                         RunOnUI(() =>
                         {
+                            NotifyPropertyChanged(nameof(HasCacheInfo));
+                            NotifyPropertyChanged(nameof(CacheInfoTitle));
+                            NotifyPropertyChanged(nameof(CacheFromLabel));
+                            NotifyPropertyChanged(nameof(CacheFromValue));
+                            NotifyPropertyChanged(nameof(CacheDateLabel));
+                            NotifyPropertyChanged(nameof(CacheDateValue));
+                            NotifyPropertyChanged(nameof(CacheContentsSummary));
                             IsSearching = false;
                             ProgressText = "";
                             ProgressMax = 0;
