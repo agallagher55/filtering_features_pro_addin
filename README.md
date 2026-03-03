@@ -113,10 +113,23 @@ These are the **metadata authoring dates** (when someone last edited the item's 
 
 | Problem | Solution |
 |---------|----------|
+| Blank/empty ArcGIS Pro dialog appears when the add-in launches (shows a spinner and **More info**) | This is usually an older add-in package built before the DAML metadata fix. Close ArcGIS Pro, then remove the old add-in folder for this add-in ID under `%UserProfile%\Documents\ArcGIS\AddIns\ArcGISPro\{a73f5d21-b8e4-4c9a-a620-7e3d1f6c8b55}` and reinstall a freshly built `.esriAddinX`. If it still appears, clear `%LocalAppData%\ESRI\ArcGISPro\AssemblyCache` so Pro reloads the updated add-in manifest. If your **Documents** folder is redirected to OneDrive, this add-in path will also be under OneDrive; that's expected behavior in ArcGIS Pro. |
 | No connections appear in the dropdown | Ensure `.sde` files exist in one of the scanned locations listed above, or add one manually. Click ⟳ in the header to rescan. |
 | "Error: Failed to add data, unsupported data type" | Click ↻ to refresh from the database. This typically means the local cache is outdated and missing feature dataset path information. |
 | Metadata fields are empty | Metadata is loaded from the geodatabase's ArcGIS metadata. If no metadata has been authored for a dataset, these fields will be blank. |
 | Slow initial load | The first live enumeration queries every dataset in the geodatabase. Subsequent loads use the local cache. Consider deploying a seed cache for large databases. |
+
+### Where ArcGIS Pro installs add-ins (and OneDrive)
+
+ArcGIS Pro installs per-user add-ins under the Windows **Documents** folder:
+
+`%UserProfile%\Documents\ArcGIS\AddIns\ArcGISPro\{AddInGuid}`
+
+If your organization redirects **Documents** to OneDrive, the add-in path will appear under OneDrive (for example, `OneDrive - <Org>\Documents\ArcGIS\AddIns\ArcGISPro\...`). This is normal.
+
+Can this path be changed? Not from this add-in itself. In practice, it follows the Windows Documents location used by ArcGIS Pro.
+
+Should you change it? Usually no, unless IT policy requires it. If OneDrive sync causes file lock/sync conflicts, coordinate with IT to adjust folder redirection/backup policy for the ArcGIS add-ins folder rather than hard-coding custom install paths in the add-in.
 
 ## Project Structure
 
