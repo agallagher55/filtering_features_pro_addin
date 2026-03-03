@@ -1548,7 +1548,68 @@ namespace ProAppAddInSdeSearch
         private void ReportProgress(string t) => RunOnUI(() => ProgressText = t);
         private void ReportStatus(string t) => RunOnUI(() => StatusText = t);
         private void InvalidateCommands() => RunOnUI(() => CommandManager.InvalidateRequerySuggested());
-        private static void RunOnUI(Action a) => System.Windows.Application.Current.Dispatcher.Invoke(a);
+
+        /// <summary>
+        /// Safely execute work on the UI thread without crashing if the dispatcher is unavailable
+        /// during startup/shutdown edge-cases.
+        /// </summary>
+        private static void RunOnUI(Action a)
+        {
+            if (a == null) return;
+
+            try
+            {
+                var dispatcher = System.Windows.Application.Current?.Dispatcher;
+
+                // During ArcGIS Pro startup/shutdown, Application.Current/Dispatcher can be unavailable.
+                // These updates are best-effort only, so safely skip if the dispatcher is not ready.
+                if (dispatcher == null || dispatcher.HasShutdownStarted || dispatcher.HasShutdownFinished)
+                    return;
+
+                if (dispatcher.CheckAccess())
+                {
+                    a();
+                }
+                else
+                {
+                    // Use async dispatch to avoid potential deadlocks during startup sequencing.
+                    dispatcher.BeginInvoke(a);
+                }
+            }
+            catch (TaskCanceledException)
+            {
+                // UI is shutting down; ignore best-effort updates
+            }
+            catch (ObjectDisposedException)
+            {
+                // Dispatcher disposed during shutdown; ignore best-effort updates
+            }
+            catch (InvalidOperationException)
+            {
+                // Dispatcher is not available or is shutting down
+            }
+            catch (Exception ex)
+            {
+                LogNonFatal("RunOnUI", ex);
+            }
+        }
+
+        private static void LogNonFatal(string context, Exception ex)
+        {
+            try
+            {
+                var message = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {context}: {ex}\n";
+                System.Diagnostics.Debug.WriteLine($"SDE Search non-fatal error {context}: {ex}");
+
+                var cacheDir = SdeSearchCache.GetCacheDir();
+                var logFile = Path.Combine(cacheDir, "addin.log");
+                File.AppendAllText(logFile, message);
+            }
+            catch
+            {
+                // Never throw from logging
+            }
+        }
 
         private static string GetSimpleName(string n)
         {
@@ -1760,17 +1821,33 @@ namespace ProAppAddInSdeSearch
 
         protected override async Task InitializeAsync()
         {
-            LoadThemePreference();
-            LoadMetadataSettings();
-
-            // Re-load connections when a project is opened, since the DockPane may
-            // initialize before the project is fully loaded (e.g. restored from a
-            // previous session), causing Project.Current to be null or its items
-            // to be unavailable during the initial LoadConnections() call.
-            ProjectOpenedAsyncEvent.Subscribe(OnProjectOpened);
-
-            await LoadConnections();
             await base.InitializeAsync();
+
+            // Continue initialization out-of-band so any transient startup issues
+            // don't interfere with ArcGIS Pro pane creation.
+            _ = InitializePaneStateAsync();
+        }
+
+        private async Task InitializePaneStateAsync()
+        {
+            try
+            {
+                LoadThemePreference();
+                LoadMetadataSettings();
+
+                // Re-load connections when a project is opened, since the DockPane may
+                // initialize before the project is fully loaded (e.g. restored from a
+                // previous session), causing Project.Current to be null or its items
+                // to be unavailable during the initial LoadConnections() call.
+                ProjectOpenedAsyncEvent.Subscribe(OnProjectOpened);
+
+                await LoadConnections();
+            }
+            catch (Exception ex)
+            {
+                // Never let initialization exceptions crash ArcGIS Pro.
+                LogNonFatal("InitializePaneStateAsync", ex);
+            }
         }
 
         private Task OnProjectOpened(ProjectEventArgs args)
