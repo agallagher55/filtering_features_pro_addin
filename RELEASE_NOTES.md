@@ -7,6 +7,10 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ## 2026-03-03
 
+### Fix: Spurious ArcGIS assembly errors on add-in load
+- Removed ten unused ArcGIS Pro assembly references from the project (including `ESRI.ArcGIS.ItemIndex`, `ArcGIS.Desktop.KnowledgeGraph`, `ArcGIS.Desktop.Ribbon.Wpf`, and others carried over from the SDK template but never needed by this add-in)
+- The `ESRI.ArcGIS.ItemIndex` reference was the direct cause of a `Lucene.Net.Index.CorruptIndexException` appearing at startup when ArcGIS Pro's local search index was in a degraded state — removing it prevents the add-in from triggering that code path entirely
+
 ### Fix: ArcGIS Pro crash when opening the SDE Search pane
 - Fixed a crash where ArcGIS Pro would close immediately when the SDE Search pane was opened
 - The root cause was the cache load (reading and deserialising the ~2 MB `SeedCache.json` file) running synchronously on the WPF UI thread during pane initialisation — ArcGIS Pro detected the unresponsive UI and terminated the process
