@@ -1,4 +1,7 @@
+using System;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -10,28 +13,58 @@ namespace ProAppAddInSdeSearch
     {
         public SdeSearchPaneView()
         {
-            InitializeComponent();
-            ApplyTheme(true); // default dark
+            try
+            {
+                InitializeComponent();
+                ApplyTheme(true); // default dark
+            }
+            catch (Exception ex)
+            {
+                LogNonFatal("SdeSearchPaneView ctor", ex);
+
+                // Prevent a hard crash if XAML/resource initialization fails.
+                // Show a minimal fallback UI so the host stays alive and the error is discoverable.
+                this.Content = new TextBlock
+                {
+                    Text = "SDE Search failed to initialize UI.\nSee %LocalAppData%\\ProAppAddInSdeSearch\\Cache\\addin.log",
+                    Margin = new Thickness(12),
+                    TextWrapping = TextWrapping.Wrap
+                };
+            }
         }
 
         private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (e.OldValue is INotifyPropertyChanged oldVm)
-                oldVm.PropertyChanged -= Vm_PropertyChanged;
-            if (e.NewValue is INotifyPropertyChanged newVm)
-                newVm.PropertyChanged += Vm_PropertyChanged;
+            try
+            {
+                if (e.OldValue is INotifyPropertyChanged oldVm)
+                    oldVm.PropertyChanged -= Vm_PropertyChanged;
+                if (e.NewValue is INotifyPropertyChanged newVm)
+                    newVm.PropertyChanged += Vm_PropertyChanged;
 
-            // Apply initial theme from ViewModel
-            if (e.NewValue is SdeSearchPaneViewModel vm)
-                ApplyTheme(vm.IsDarkMode);
+                // Apply initial theme from ViewModel
+                if (e.NewValue is SdeSearchPaneViewModel vm)
+                    ApplyTheme(vm.IsDarkMode);
+            }
+            catch (Exception ex)
+            {
+                LogNonFatal("OnDataContextChanged", ex);
+            }
         }
 
         private void Vm_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(SdeSearchPaneViewModel.IsDarkMode))
+            try
             {
-                if (sender is SdeSearchPaneViewModel vm)
-                    ApplyTheme(vm.IsDarkMode);
+                if (e.PropertyName == nameof(SdeSearchPaneViewModel.IsDarkMode))
+                {
+                    if (sender is SdeSearchPaneViewModel vm)
+                        ApplyTheme(vm.IsDarkMode);
+                }
+            }
+            catch (Exception ex)
+            {
+                LogNonFatal("Vm_PropertyChanged", ex);
             }
         }
 
@@ -66,6 +99,24 @@ namespace ProAppAddInSdeSearch
                 res["AccentHover"]   = new SolidColorBrush(Color.FromRgb(0xBB, 0x6C, 0x0A));
                 res["AccentLight"]   = new SolidColorBrush(Color.FromRgb(0xA0, 0x5E, 0x08));
                 res["AccentText"]    = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
+            }
+        }
+
+        private static void LogNonFatal(string context, Exception ex)
+        {
+            try
+            {
+                Debug.WriteLine($"SDE Search UI non-fatal error {context}: {ex}");
+
+                var dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    "ProAppAddInSdeSearch", "Cache");
+                Directory.CreateDirectory(dir);
+                var logFile = Path.Combine(dir, "addin.log");
+                File.AppendAllText(logFile, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {context}: {ex}\n");
+            }
+            catch
+            {
+                // Never throw from logging
             }
         }
 
