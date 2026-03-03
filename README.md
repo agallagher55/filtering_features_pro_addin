@@ -113,6 +113,7 @@ These are the **metadata authoring dates** (when someone last edited the item's 
 
 | Problem | Solution |
 |---------|----------|
+| Blank/empty ArcGIS Pro dialog appears when the add-in launches (shows a spinner and **More info**) | This is usually an older add-in package built before the DAML metadata fix. Remove old copies from `%UserProfile%\Documents\ArcGIS\AddIns\ArcGISPro`, rebuild from the current source, and reinstall the new `.esriAddinX`. If it still appears, close ArcGIS Pro and clear `%LocalAppData%\ESRI\ArcGISPro\AssemblyCache` so Pro reloads the updated add-in manifest. |
 | No connections appear in the dropdown | Ensure `.sde` files exist in one of the scanned locations listed above, or add one manually. Click ⟳ in the header to rescan. |
 | "Error: Failed to add data, unsupported data type" | Click ↻ to refresh from the database. This typically means the local cache is outdated and missing feature dataset path information. |
 | Metadata fields are empty | Metadata is loaded from the geodatabase's ArcGIS metadata. If no metadata has been authored for a dataset, these fields will be blank. |
