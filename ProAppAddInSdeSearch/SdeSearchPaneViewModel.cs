@@ -1668,7 +1668,10 @@ namespace ProAppAddInSdeSearch
 
         private void LoadMetadataSettings()
         {
-            var cacheDir = SdeSearchCache.GetCacheDir();
+            string cacheDir;
+            try { cacheDir = SdeSearchCache.GetCacheDir(); }
+            catch { _metadataSettings = HardcodedDefaultMetadataSettings(); return; }
+
             var userFile = Path.Combine(cacheDir, "metadata_settings.json");
 
             // Seed the user-editable copy from the bundled default on first run
@@ -1760,16 +1763,28 @@ namespace ProAppAddInSdeSearch
 
         protected override async Task InitializeAsync()
         {
-            LoadThemePreference();
-            LoadMetadataSettings();
+            try
+            {
+                LoadThemePreference();
+                LoadMetadataSettings();
 
-            // Re-load connections when a project is opened, since the DockPane may
-            // initialize before the project is fully loaded (e.g. restored from a
-            // previous session), causing Project.Current to be null or its items
-            // to be unavailable during the initial LoadConnections() call.
-            ProjectOpenedAsyncEvent.Subscribe(OnProjectOpened);
+                // Re-load connections when a project is opened, since the DockPane may
+                // initialize before the project is fully loaded (e.g. restored from a
+                // previous session), causing Project.Current to be null or its items
+                // to be unavailable during the initial LoadConnections() call.
+                ProjectOpenedAsyncEvent.Subscribe(OnProjectOpened);
 
-            await LoadConnections();
+                await LoadConnections();
+            }
+            catch (Exception ex)
+            {
+                // Catch any unexpected initialisation error so that ArcGIS Pro is not
+                // brought down by an unhandled exception from our override.  Surface the
+                // problem as a status message the user can report.
+                try { StatusText = $"Initialisation error — please report: {ex.GetType().Name}: {ex.Message}"; } catch { }
+                System.Diagnostics.Debug.WriteLine($"[SDE Search] InitializeAsync error: {ex}");
+            }
+
             await base.InitializeAsync();
         }
 
