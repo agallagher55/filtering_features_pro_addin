@@ -1729,7 +1729,10 @@ namespace ProAppAddInSdeSearch
 
         private void LoadMetadataSettings()
         {
-            var cacheDir = SdeSearchCache.GetCacheDir();
+            string cacheDir;
+            try { cacheDir = SdeSearchCache.GetCacheDir(); }
+            catch { _metadataSettings = HardcodedDefaultMetadataSettings(); return; }
+
             var userFile = Path.Combine(cacheDir, "metadata_settings.json");
 
             // Seed the user-editable copy from the bundled default on first run
@@ -1821,15 +1824,6 @@ namespace ProAppAddInSdeSearch
 
         protected override async Task InitializeAsync()
         {
-            await base.InitializeAsync();
-
-            // Continue initialization out-of-band so any transient startup issues
-            // don't interfere with ArcGIS Pro pane creation.
-            _ = InitializePaneStateAsync();
-        }
-
-        private async Task InitializePaneStateAsync()
-        {
             try
             {
                 LoadThemePreference();
@@ -1845,9 +1839,14 @@ namespace ProAppAddInSdeSearch
             }
             catch (Exception ex)
             {
-                // Never let initialization exceptions crash ArcGIS Pro.
-                LogNonFatal("InitializePaneStateAsync", ex);
+                // Catch any unexpected initialisation error so that ArcGIS Pro is not
+                // brought down by an unhandled exception from our override.  Surface the
+                // problem as a status message the user can report.
+                try { StatusText = $"Initialisation error — please report: {ex.GetType().Name}: {ex.Message}"; } catch { }
+                System.Diagnostics.Debug.WriteLine($"[SDE Search] InitializeAsync error: {ex}");
             }
+
+            await base.InitializeAsync();
         }
 
         private Task OnProjectOpened(ProjectEventArgs args)
