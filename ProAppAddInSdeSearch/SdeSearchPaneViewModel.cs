@@ -5,6 +5,7 @@ using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Framework.Dialogs;
 using ArcGIS.Desktop.Mapping;
 using System;
 using System.Collections.Generic;
@@ -1857,8 +1858,29 @@ namespace ProAppAddInSdeSearch
 
         internal static void Show()
         {
-            var pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-            pane?.Activate();
+            try
+            {
+                var pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+                if (pane == null)
+                {
+                    MessageBox.Show("SDE Search pane could not be created.", "SDE Search");
+                    return;
+                }
+
+                pane.Activate();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine($"SDE Search Show() error: {ex}");
+                    MessageBox.Show($"Failed to open SDE Search pane.\n\n{ex.Message}", "SDE Search");
+                }
+                catch
+                {
+                    // Last-resort: never let show-button exceptions crash ArcGIS Pro.
+                }
+            }
         }
 
         #endregion
@@ -2268,6 +2290,24 @@ namespace ProAppAddInSdeSearch
 
     internal class Dockpane1_ShowButton : Button
     {
-        protected override void OnClick() => SdeSearchPaneViewModel.Show();
+        protected override void OnClick()
+        {
+            try
+            {
+                SdeSearchPaneViewModel.Show();
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine($"SDE Search show button error: {ex}");
+                    MessageBox.Show($"SDE Search failed to open.\n\n{ex.Message}", "SDE Search");
+                }
+                catch
+                {
+                    // Never throw from button click handlers.
+                }
+            }
+        }
     }
 }
