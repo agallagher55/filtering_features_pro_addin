@@ -5,6 +5,16 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ---
 
+## 2026-03-03
+
+### Fix: ArcGIS Pro crash when opening the SDE Search pane
+- Fixed a crash where ArcGIS Pro would close immediately when the SDE Search pane was opened
+- The root cause was the cache load (reading and deserialising the ~2 MB `SeedCache.json` file) running synchronously on the WPF UI thread during pane initialisation — ArcGIS Pro detected the unresponsive UI and terminated the process
+- Cache I/O and search-index building are now dispatched to a background thread via `await Task.Run(...)`, keeping the UI thread free throughout
+- Also fixed a secondary race condition where `_allDatasets.Clear()` could cause an `InvalidOperationException` in a concurrently-running filter task; the list reference is now replaced rather than mutated in place
+
+---
+
 ## 2026-02-25
 
 ### Add-in startup information dialog

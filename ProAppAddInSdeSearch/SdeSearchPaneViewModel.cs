@@ -520,7 +520,10 @@ namespace ProAppAddInSdeSearch
 
             IsSearching = true;
             ShowDetails = false;
-            _allDatasets.Clear();
+            // Assign a new list rather than clearing the existing one so that any
+            // concurrently-running ApplyFilterAndSearch Task.Run that captured the
+            // old reference can finish iterating without an InvalidOperationException.
+            _allDatasets = new List<SdeDatasetItem>();
 
             var connPath = SelectedConnection.Path;
             var connName = SelectedConnection.Name;
@@ -529,14 +532,33 @@ namespace ProAppAddInSdeSearch
             if (!forceRefresh)
             {
                 ReportProgress("Checking cache...");
-                var cached = SdeSearchCache.Load(connPath, out DateTime? cachedAt, out bool usedSeedCache);
+
+                // SdeSearchCache.Load() reads and deserialises a potentially large JSON
+                // file (e.g. ~2 MB SeedCache.json) synchronously.  Doing this on the
+                // WPF Dispatcher thread blocks UI message processing long enough for
+                // ArcGIS Pro to detect an unresponsive UI and terminate the process.
+                // Move all disk I/O and CPU-bound search-text building to a thread-pool
+                // thread; the continuation re-joins the Dispatcher thread automatically
+                // because WPF's DispatcherSynchronizationContext is captured at the await.
+                List<SdeDatasetItem> cached = null;
+                DateTime? cachedAt = null;
+                bool usedSeedCache = false;
+                (string ConnectionPath, DateTime? CachedAt, int FCs, int Tables, int FDs, int Rels) seedInfo = default;
+
+                await Task.Run(() =>
+                {
+                    cached = SdeSearchCache.Load(connPath, out cachedAt, out usedSeedCache);
+                    if (cached != null)
+                        foreach (var d in cached) BuildSearchTexts(d);
+                    if (usedSeedCache)
+                        seedInfo = SdeSearchCache.GetSeedCacheInfo();
+                });
+
                 if (cached != null && cached.Count > 0)
                 {
                     // A newer call may have started; let it win
                     if (myGeneration != _loadGeneration) return;
 
-                    // Rebuild the [JsonIgnore] search index strings since they are not persisted
-                    foreach (var d in cached) BuildSearchTexts(d);
                     _allDatasets = cached;
                     _cacheTimestamp = cachedAt;
                     int fcs = cached.Count(d => d.DatasetType == "Feature Class");
@@ -557,7 +579,7 @@ namespace ProAppAddInSdeSearch
 
                     if (usedSeedCache)
                     {
-                        var (seedConn, seedDate, seedFCs, seedTbls, seedFDs, seedRels) = SdeSearchCache.GetSeedCacheInfo();
+                        var (seedConn, seedDate, seedFCs, seedTbls, seedFDs, seedRels) = seedInfo;
                         RunOnUI(() =>
                         {
                             IsUsingSeedCache = true;
