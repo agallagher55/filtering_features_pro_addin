@@ -5,6 +5,15 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ---
 
+## 2026-03-04
+
+### Attribute Rules filter and badge
+- Feature classes and tables that have attribute rules defined are now detected at load time and displayed with an **Attr Rules** badge in the results list
+- A new **Attribute Rules** checkbox in the Filters row lets you narrow results to only items that have attribute rules configured
+- The "Flags" line in the search index and detail metadata also includes "✓ Attribute Rules" when applicable
+
+---
+
 ## 2026-03-03
 
 ### Fix: Spurious ArcGIS assembly errors on add-in load

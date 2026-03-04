@@ -77,6 +77,7 @@ namespace ProAppAddInSdeSearch
         private bool _filterEditorTracking;
         private bool _filterArchiving;
         private bool _filterSubtypes;
+        private bool _filterAttributeRules;
 
         // ── Filter cancellation ───────────────────────
         private CancellationTokenSource _filterCts;
@@ -362,6 +363,12 @@ namespace ProAppAddInSdeSearch
         {
             get => _filterArchiving;
             set { if (SetProperty(ref _filterArchiving, value)) ApplyFilterAndSearch(); }
+        }
+
+        public bool FilterAttributeRules
+        {
+            get => _filterAttributeRules;
+            set { if (SetProperty(ref _filterAttributeRules, value)) ApplyFilterAndSearch(); }
         }
 
         public bool FilterSubtypes
@@ -737,6 +744,7 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
                                     DetectSubtypes(item, def);
+                                    DetectAttributeRules(item, def);
                                     // Field details are lazy-loaded on demand; only store the count for display
                                     try { item.FieldCount = def.GetFields().Count; } catch { }
                                     BuildSearchTexts(item);
@@ -788,6 +796,7 @@ namespace ProAppAddInSdeSearch
                                     DetectEditorTracking(item, def);
                                     DetectArchiving(item, def, gdb);
                                     DetectSubtypes(item, def);
+                                    DetectAttributeRules(item, def);
                                     // Field details are lazy-loaded on demand; only store the count for display
                                     try { item.FieldCount = def.GetFields().Count; } catch { }
                                     BuildSearchTexts(item);
@@ -980,6 +989,7 @@ namespace ProAppAddInSdeSearch
             bool filtET  = _filterEditorTracking;
             bool filtArch = _filterArchiving;
             bool filtSub  = _filterSubtypes;
+            bool filtAttrRules = _filterAttributeRules;
             var datasets = _allDatasets; // capture reference; List<T> is thread-safe for concurrent reads
 
             _ = Task.Run(() =>
@@ -988,9 +998,10 @@ namespace ProAppAddInSdeSearch
                 {
                     if (typeFilter != "All" && item.GeometryIconType != typeFilter) return false;
 
-                    if (filtET   && !item.HasEditorTracking) return false;
-                    if (filtArch && !item.IsArchived) return false;
-                    if (filtSub  && !item.HasSubtypes) return false;
+                    if (filtET       && !item.HasEditorTracking) return false;
+                    if (filtArch     && !item.IsArchived) return false;
+                    if (filtSub      && !item.HasSubtypes) return false;
+                    if (filtAttrRules && !item.HasAttributeRules) return false;
 
                     if (wildcard) return true;
                     return MatchesSearch(item, upperTerms, byName, byMeta, byTags);
@@ -1097,6 +1108,9 @@ namespace ProAppAddInSdeSearch
                             // ── Subtype detection ─────────────────
                             DetectSubtypes(item, tableDef);
 
+                            // ── Attribute rules detection ──────────
+                            DetectAttributeRules(item, tableDef);
+
                             // ── Created / Modified dates from metadata ─
                             DetectDates(item);
 
@@ -1184,6 +1198,16 @@ namespace ProAppAddInSdeSearch
             catch { }
         }
 
+        private static void DetectAttributeRules(SdeDatasetItem item, TableDefinition tableDef)
+        {
+            try
+            {
+                var rules = tableDef.GetAttributeRules();
+                item.HasAttributeRules = rules != null && rules.Count > 0;
+            }
+            catch { }
+        }
+
         private void DetectDates(SdeDatasetItem item)
         {
             if (item.RawMetadataXml == null) return;
@@ -1224,6 +1248,7 @@ namespace ProAppAddInSdeSearch
             if (item.HasEditorTracking) flagParts.Add("✓ Editor Tracking");
             if (item.IsArchived)        flagParts.Add("✓ Archiving");
             if (item.HasSubtypes)       flagParts.Add("✓ Subtypes");
+            if (item.HasAttributeRules) flagParts.Add("✓ Attribute Rules");
 
             bool hasAnyMetadataContent = false;
 
@@ -1540,6 +1565,7 @@ namespace ProAppAddInSdeSearch
             FilterEditorTracking = false;
             FilterArchiving = false;
             FilterSubtypes = false;
+            FilterAttributeRules = false;
             ApplyFilterAndSearch();
             ShowDetails = false;
             StatusText = _allDatasets.Count > 0 ? $"Showing all {_allDatasets.Count} items" : "Select a connection";
@@ -2127,6 +2153,7 @@ namespace ProAppAddInSdeSearch
         public bool HasEditorTracking { get; set; }
         public bool IsArchived { get; set; }
         public bool HasSubtypes { get; set; }
+        public bool HasAttributeRules { get; set; }
 
         // Fields are lazy-loaded on demand when the user opens the detail view;
         // they are never written to the cache JSON.
@@ -2168,7 +2195,7 @@ namespace ProAppAddInSdeSearch
         }
 
         [JsonIgnore]
-        public bool HasFlags => HasEditorTracking || IsArchived || HasSubtypes;
+        public bool HasFlags => HasEditorTracking || IsArchived || HasSubtypes || HasAttributeRules;
 
         [JsonIgnore]
         public bool HasBadges => HasFlags || !string.IsNullOrEmpty(FeatureDatasetName);
