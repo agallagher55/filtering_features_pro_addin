@@ -283,28 +283,28 @@
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
                 <CheckBox IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="8" Height="8" Fill="#64B5F6" Margin="0,0,5,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Editor Tracking" VerticalAlignment="Center"/>
+                        <Ellipse Width="8" Height="8" Fill="#64B5F6" Margin="5,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </CheckBox>
                 <CheckBox IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="M 4,0 L 8,4 L 4,8 L 0,4 Z" Width="8" Height="8" Stretch="Fill"
-                              Fill="#CE93D8" Margin="0,0,5,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Archiving" VerticalAlignment="Center"/>
+                        <Path Data="M 4,0 L 8,4 L 4,8 L 0,4 Z" Width="8" Height="8" Stretch="Fill"
+                              Fill="#CE93D8" Margin="5,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </CheckBox>
                 <CheckBox IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}">
                     <StackPanel Orientation="Horizontal">
-                        <Rectangle Width="8" Height="8" Fill="#FF8A65" Margin="0,0,5,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Subtypes" VerticalAlignment="Center"/>
+                        <Rectangle Width="8" Height="8" Fill="#FF8A65" Margin="5,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </CheckBox>
                 <CheckBox IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}">
                     <StackPanel Orientation="Horizontal">
-                        <Path Data="M 4,0 L 8,8 L 0,8 Z" Width="8" Height="8" Stretch="Fill"
-                              Fill="#4DB6AC" Margin="0,0,5,0" VerticalAlignment="Center"/>
                         <TextBlock Text="Attribute Rules" VerticalAlignment="Center"/>
+                        <Path Data="M 4,0 L 8,8 L 0,8 Z" Width="8" Height="8" Stretch="Fill"
+                              Fill="#4DB6AC" Margin="5,0,0,0" VerticalAlignment="Center"/>
                     </StackPanel>
                 </CheckBox>
             </WrapPanel>
