@@ -284,6 +284,7 @@
                 <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Archiving" IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}"/>
                 <CheckBox Content="Subtypes" IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}"/>
+                <CheckBox Content="Attribute Rules" IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}"/>
             </WrapPanel>
         </Border>
 
@@ -408,6 +409,13 @@
                                                 Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}">
                                             <TextBlock Text="Subtypes" FontSize="9"
                                                        Foreground="#FF8A65" VerticalAlignment="Center"/>
+                                        </Border>
+                                        <!-- Attribute Rules badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
+                                                Background="#3326A69A"
+                                                Visibility="{Binding HasAttributeRules, Converter={StaticResource BoolToVis}}">
+                                            <TextBlock Text="Attr Rules" FontSize="9"
+                                                       Foreground="#4DB6AC" VerticalAlignment="Center"/>
                                         </Border>
                                     </WrapPanel>
 
