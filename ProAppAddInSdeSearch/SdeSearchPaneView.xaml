@@ -281,10 +281,32 @@
             <WrapPanel>
                 <TextBlock Text="Filters:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
                            VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Archiving" IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Subtypes" IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Attribute Rules" IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}"/>
+                <CheckBox IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}">
+                    <StackPanel Orientation="Horizontal">
+                        <Ellipse Width="8" Height="8" Fill="#64B5F6" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Editor Tracking" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 4,0 L 8,4 L 4,8 L 0,4 Z" Width="8" Height="8" Stretch="Fill"
+                              Fill="#CE93D8" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Archiving" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}">
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="8" Height="8" Fill="#FF8A65" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Subtypes" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </CheckBox>
+                <CheckBox IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}">
+                    <StackPanel Orientation="Horizontal">
+                        <Path Data="M 4,0 L 8,8 L 0,8 Z" Width="8" Height="8" Stretch="Fill"
+                              Fill="#4DB6AC" Margin="0,0,5,0" VerticalAlignment="Center"/>
+                        <TextBlock Text="Attribute Rules" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </CheckBox>
             </WrapPanel>
         </Border>
 
@@ -389,34 +411,24 @@
                                                            Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
-                                        <!-- Editor Tracking badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
-                                                Background="#332196F3"
-                                                Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="Editor Tracking" FontSize="9"
-                                                       Foreground="#64B5F6" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <!-- Archiving badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
-                                                Background="#33AB47BC"
-                                                Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="Archiving" FontSize="9"
-                                                       Foreground="#CE93D8" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <!-- Subtypes badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
-                                                Background="#33FF7043"
-                                                Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="Subtypes" FontSize="9"
-                                                       Foreground="#FF8A65" VerticalAlignment="Center"/>
-                                        </Border>
-                                        <!-- Attribute Rules badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
-                                                Background="#3326A69A"
-                                                Visibility="{Binding HasAttributeRules, Converter={StaticResource BoolToVis}}">
-                                            <TextBlock Text="Attr Rules" FontSize="9"
-                                                       Foreground="#4DB6AC" VerticalAlignment="Center"/>
-                                        </Border>
+                                        <!-- Editor Tracking: circle -->
+                                        <Ellipse Width="8" Height="8" Fill="#64B5F6" Margin="0,0,5,0" VerticalAlignment="Center"
+                                                 Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}"
+                                                 ToolTip="Editor Tracking"/>
+                                        <!-- Archiving: diamond -->
+                                        <Path Data="M 4,0 L 8,4 L 4,8 L 0,4 Z" Width="8" Height="8" Stretch="Fill"
+                                              Fill="#CE93D8" Margin="0,0,5,0" VerticalAlignment="Center"
+                                              Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}"
+                                              ToolTip="Archiving"/>
+                                        <!-- Subtypes: square -->
+                                        <Rectangle Width="8" Height="8" Fill="#FF8A65" Margin="0,0,5,0" VerticalAlignment="Center"
+                                                   Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}"
+                                                   ToolTip="Subtypes"/>
+                                        <!-- Attribute Rules: triangle -->
+                                        <Path Data="M 4,0 L 8,8 L 0,8 Z" Width="8" Height="8" Stretch="Fill"
+                                              Fill="#4DB6AC" Margin="0,0,5,0" VerticalAlignment="Center"
+                                              Visibility="{Binding HasAttributeRules, Converter={StaticResource BoolToVis}}"
+                                              ToolTip="Attribute Rules"/>
                                     </WrapPanel>
 
                                     <Button Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
