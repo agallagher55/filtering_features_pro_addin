@@ -659,7 +659,7 @@
             <TextBlock FontSize="9" Foreground="{DynamicResource SecondaryText}" Opacity="0.6"
                        TextTrimming="CharacterEllipsis">
                 <Run Text="SDE Search ·"/>
-                <Run Text="{Binding AddinInstallDate, StringFormat='installed {0}'}"/>
+                <Run Text="{Binding AddinInstallDate, Mode=OneWay, StringFormat='installed {0}'}"/>
             </TextBlock>
         </Border>
     </Grid>
