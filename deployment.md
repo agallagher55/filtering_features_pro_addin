@@ -1,3 +1,5 @@
+Shared Folder: R:\HRM Common Directory\FileSharing\Alex Gallagher\ArcGIS Pro\Add-ins\SDE Search\Prod
+
 Recommended shared-folder setup
 1) Create a dedicated UNC folder
 
