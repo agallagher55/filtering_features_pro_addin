@@ -182,7 +182,7 @@
                 <Viewbox Width="20" Height="20" Margin="0,0,8,0">
                     <Path Data="{Binding GeometryIconType, Converter={StaticResource GeomPathConv}}"
                           Stroke="{Binding GeometryIconType, Converter={StaticResource GeomColorConv}}"
-                          StrokeThickness="1.5" Fill="Transparent"
+                          StrokeThickness="2.2" Fill="Transparent"
                           Stretch="Uniform" Width="20" Height="20"/>
                 </Viewbox>
             </DataTemplate>
@@ -412,7 +412,7 @@
                                     <Viewbox Grid.Column="0" Grid.RowSpan="3" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center">
                                         <Path Data="{Binding GeometryIconType, Converter={StaticResource GeomPathConv}}"
                                               Stroke="{Binding GeometryIconType, Converter={StaticResource GeomColorConv}}"
-                                              StrokeThickness="1.5" Fill="Transparent"
+                                              StrokeThickness="2.2" Fill="Transparent"
                                               Stretch="Uniform" Width="20" Height="20"/>
                                     </Viewbox>
 
@@ -440,23 +440,23 @@
                                                            Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
-                                        <!-- Editor Tracking indicator -->
-                                        <Ellipse Width="5" Height="5" Fill="{DynamicResource SecondaryText}" Opacity="0.7"
+                                        <!-- Editor Tracking: Bitcoin orange -->
+                                        <Ellipse Width="7" Height="7" Fill="#F7931A"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"
                                                  Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}"
                                                  ToolTip="Editor Tracking"/>
-                                        <!-- Archiving indicator -->
-                                        <Ellipse Width="5" Height="5" Fill="{DynamicResource SecondaryText}" Opacity="0.7"
+                                        <!-- Archiving: amber -->
+                                        <Ellipse Width="7" Height="7" Fill="#FFC107"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"
                                                  Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}"
                                                  ToolTip="Archiving"/>
-                                        <!-- Subtypes indicator -->
-                                        <Ellipse Width="5" Height="5" Fill="{DynamicResource SecondaryText}" Opacity="0.7"
+                                        <!-- Subtypes: coral/deep-orange -->
+                                        <Ellipse Width="7" Height="7" Fill="#FF5722"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"
                                                  Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}"
                                                  ToolTip="Subtypes"/>
-                                        <!-- Attribute Rules indicator -->
-                                        <Ellipse Width="5" Height="5" Fill="{DynamicResource SecondaryText}" Opacity="0.7"
+                                        <!-- Attribute Rules: cyan (complementary) -->
+                                        <Ellipse Width="7" Height="7" Fill="#29B6F6"
                                                  Margin="0,0,4,0" VerticalAlignment="Center"
                                                  Visibility="{Binding HasAttributeRules, Converter={StaticResource BoolToVis}}"
                                                  ToolTip="Attribute Rules"/>
