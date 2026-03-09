@@ -326,16 +326,38 @@
         </Border>
 
         <!-- ═══ TAG FILTERS ═══ -->
-        <Border Grid.Row="4" Background="{DynamicResource FieldBg}" Padding="12,6"
+        <Border Grid.Row="4" Background="{DynamicResource FieldBg}" Padding="12,8"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-            <WrapPanel>
-                <TextBlock Text="Filters:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
-                           VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Archiving" IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Subtypes" IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}"/>
-                <CheckBox Content="Attribute Rules" IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}"/>
-            </WrapPanel>
+            <StackPanel>
+                <TextBlock Text="FILTERS" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Accent}" Margin="0,0,0,6"/>
+                <UniformGrid Columns="2">
+                    <CheckBox IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="#F7931A" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Editor Tracking" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="#FFC107" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Archiving" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="#FF5722" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Subtypes" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </CheckBox>
+                    <CheckBox IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="7" Height="7" Fill="#29B6F6" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBlock Text="Attribute Rules" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </CheckBox>
+                </UniformGrid>
+            </StackPanel>
         </Border>
 
         <!-- ═══ PROGRESS ═══ -->
