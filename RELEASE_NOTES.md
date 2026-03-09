@@ -5,6 +5,22 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ---
 
+## 2026-03-09
+
+### UI redesign — Bitcoin-orange accent theme
+
+- Header replaced with a dark bar and a thin Bitcoin-orange bottom rule plus a vertical orange accent mark beside the title — cleaner and less visually dominant than the previous solid orange header
+- **Filter** and **Refresh** buttons now have 4 px rounded corners instead of the default WPF pill shape, giving a more precise, tool-like feel
+- Geometry type icons in the results list are now outlined (stroke) rather than filled, reducing visual weight while keeping colour coding
+- Result row hover state now shows a subtle 8 % opacity orange wash instead of a plain grey highlight, tying interaction feedback to the brand accent
+- The **+** add-to-map button is now invisible at rest and shows an orange border only on hover, reducing chrome in the list
+- Flag indicators (Editor Tracking, Archiving, Subtypes, Attribute Rules) in the results list are now uniform small grey dots instead of four different coloured shapes (circle, diamond, square, triangle), removing colour noise
+- Filter row checkboxes no longer show decorative coloured shapes next to their labels — the label text alone is sufficient
+- Result count in the status bar uses subdued secondary text instead of the highlighted accent colour
+- Background and border palette tightened to `#1E1E1E` / `#252525` / `#333333` for a more precise dark-mode base
+
+---
+
 ## 2026-03-04
 
 ### Attribute Rules filter and badge
