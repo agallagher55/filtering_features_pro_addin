@@ -78,15 +78,16 @@ namespace ProAppAddInSdeSearch
 
             if (dark)
             {
-                res["PanelBg"]       = new SolidColorBrush(Color.FromRgb(0x1A, 0x1A, 0x1A));
-                res["FieldBg"]       = new SolidColorBrush(Color.FromRgb(0x24, 0x24, 0x24));
-                res["BorderBrush"]   = new SolidColorBrush(Color.FromRgb(0x3A, 0x3A, 0x3A));
-                res["PrimaryText"]   = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
-                res["SecondaryText"] = new SolidColorBrush(Color.FromRgb(0xAA, 0xAA, 0xAA));
-                res["Accent"]        = new SolidColorBrush(Color.FromRgb(0xF7, 0x93, 0x1A)); // Bitcoin Yellow
-                res["AccentHover"]   = new SolidColorBrush(Color.FromRgb(0xE8, 0x85, 0x0F));
+                res["PanelBg"]       = new SolidColorBrush(Color.FromRgb(0x1E, 0x1E, 0x1E));
+                res["FieldBg"]       = new SolidColorBrush(Color.FromRgb(0x25, 0x25, 0x25));
+                res["BorderBrush"]   = new SolidColorBrush(Color.FromRgb(0x33, 0x33, 0x33));
+                res["PrimaryText"]   = new SolidColorBrush(Color.FromRgb(0xF0, 0xF0, 0xF0));
+                res["SecondaryText"] = new SolidColorBrush(Color.FromRgb(0x88, 0x88, 0x88));
+                res["Accent"]        = new SolidColorBrush(Color.FromRgb(0xF7, 0x93, 0x1A)); // Bitcoin orange
+                res["AccentHover"]   = new SolidColorBrush(Color.FromRgb(0xE8, 0x84, 0x1A));
                 res["AccentLight"]   = new SolidColorBrush(Color.FromRgb(0xFF, 0xB3, 0x47));
                 res["AccentText"]    = new SolidColorBrush(Color.FromRgb(0x1A, 0x1A, 0x1A));
+                res["AccentSubtle"]  = new SolidColorBrush(Color.FromArgb(0x14, 0xF7, 0x93, 0x1A)); // 8% orange for hover
             }
             else
             {
@@ -95,10 +96,11 @@ namespace ProAppAddInSdeSearch
                 res["BorderBrush"]   = new SolidColorBrush(Color.FromRgb(0xD0, 0xD0, 0xD0));
                 res["PrimaryText"]   = new SolidColorBrush(Color.FromRgb(0x1A, 0x1A, 0x1A));
                 res["SecondaryText"] = new SolidColorBrush(Color.FromRgb(0x66, 0x66, 0x66));
-                res["Accent"]        = new SolidColorBrush(Color.FromRgb(0xD4, 0x7B, 0x0E)); // Darker gold for contrast
+                res["Accent"]        = new SolidColorBrush(Color.FromRgb(0xD4, 0x7B, 0x0E)); // Darker gold for light contrast
                 res["AccentHover"]   = new SolidColorBrush(Color.FromRgb(0xBB, 0x6C, 0x0A));
                 res["AccentLight"]   = new SolidColorBrush(Color.FromRgb(0xA0, 0x5E, 0x08));
                 res["AccentText"]    = new SolidColorBrush(Color.FromRgb(0xFF, 0xFF, 0xFF));
+                res["AccentSubtle"]  = new SolidColorBrush(Color.FromArgb(0x14, 0xD4, 0x7B, 0x0E)); // 8% gold for hover
             }
         }
 
