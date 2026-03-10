@@ -230,10 +230,10 @@
         </Border>
 
         <!-- ═══ CONNECTION ═══ -->
-        <Border Grid.Row="1" Background="{DynamicResource FieldBg}" Padding="12,8"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+        <Border Grid.Row="1" Background="{DynamicResource PanelBg}" Padding="12,10"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0">
             <StackPanel>
-                <TextBlock Text="DATABASE CONNECTION" FontSize="10" FontWeight="SemiBold"
+                <TextBlock Text="DATABASE CONNECTION" FontSize="11" FontWeight="SemiBold"
                            Foreground="{DynamicResource Accent}" Margin="0,0,0,6"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -254,7 +254,7 @@
         </Border>
 
         <!-- ═══ SEARCH ═══ -->
-        <Border Grid.Row="2" Background="{DynamicResource PanelBg}" Padding="12,10" 
+        <Border Grid.Row="2" Background="{DynamicResource PanelBg}" Padding="12,8,12,10"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
             <StackPanel>
                 <Grid>
@@ -281,12 +281,12 @@
         </Border>
 
         <!-- ═══ FILTERS (collapsible) ═══ -->
-        <Border Grid.Row="3" Background="{DynamicResource FieldBg}"
+        <Border Grid.Row="3" Background="{DynamicResource PanelBg}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0">
             <Expander IsExpanded="True" Background="Transparent" BorderThickness="0" Padding="12,6,12,0">
                 <Expander.HeaderTemplate>
                     <DataTemplate>
-                        <TextBlock Text="FILTERS" FontSize="10" FontWeight="SemiBold"
+                        <TextBlock Text="FILTERS" FontSize="11" FontWeight="SemiBold"
                                    Foreground="{DynamicResource Accent}" Margin="4,0,0,0"/>
                     </DataTemplate>
                 </Expander.HeaderTemplate>
@@ -307,30 +307,10 @@
                     </Grid>
                     <!-- Flag filters -->
                     <UniformGrid Columns="2">
-                        <CheckBox IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="7" Height="7" Fill="#F7931A" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBlock Text="Editor Tracking" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </CheckBox>
-                        <CheckBox IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="7" Height="7" Fill="#FFC107" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBlock Text="Archiving" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </CheckBox>
-                        <CheckBox IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="7" Height="7" Fill="#FF5722" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBlock Text="Subtypes" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </CheckBox>
-                        <CheckBox IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}">
-                            <StackPanel Orientation="Horizontal">
-                                <Ellipse Width="7" Height="7" Fill="#29B6F6" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                <TextBlock Text="Attribute Rules" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </CheckBox>
+                        <CheckBox Content="Editor Tracking" IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,4"/>
+                        <CheckBox Content="Archiving"       IsChecked="{Binding FilterArchiving}"      Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,4"/>
+                        <CheckBox Content="Subtypes"        IsChecked="{Binding FilterSubtypes}"       Style="{StaticResource ThemedCheckBox}"/>
+                        <CheckBox Content="Attribute Rules" IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}"/>
                     </UniformGrid>
                 </StackPanel>
             </Expander>
@@ -338,7 +318,7 @@
 
         <!-- ═══ PROGRESS ═══ -->
         <Border Grid.Row="4" Background="{DynamicResource PanelBg}" Padding="12,8"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                BorderThickness="0"
                 Visibility="{Binding IsSearching, Converter={StaticResource BoolToVis}}">
             <StackPanel>
                 <ProgressBar Height="3" Foreground="{DynamicResource Accent}"
@@ -352,13 +332,25 @@
 
         <!-- ═══ MAIN CONTENT ═══ -->
         <Grid Grid.Row="5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/><!-- section header (results / detail / cache) -->
+                <RowDefinition Height="*"/>  <!-- scrollable content -->
+            </Grid.RowDefinitions>
+
+            <!-- RESULTS subheader — visible only when the results list is shown -->
+            <Border Grid.Row="0" Padding="12,7,12,6"
+                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                    Visibility="{Binding ShowResultsList, Converter={StaticResource BoolToVis}}">
+                <TextBlock Text="RESULTS" FontSize="11" FontWeight="SemiBold"
+                           Foreground="{DynamicResource Accent}"/>
+            </Border>
 
             <!-- ── RESULTS LIST ── -->
             <!-- ListView with VirtualizingStackPanel: only renders visible rows, greatly
                  reducing layout cost when hundreds of results are present. The ItemContainerStyle
                  strips all default ListViewItem chrome (selection, focus rect, padding) so the
                  DataTemplate Border controls the full visual appearance. -->
-            <ListView ItemsSource="{Binding SearchResults}"
+            <ListView Grid.Row="1" ItemsSource="{Binding SearchResults}"
                       Visibility="{Binding ShowResultsList, Converter={StaticResource BoolToVis}}"
                       VirtualizingPanel.IsVirtualizing="True"
                       VirtualizingPanel.VirtualizationMode="Recycling"
@@ -382,7 +374,7 @@
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Border x:Name="RowBorder" Padding="10,7" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                        <Border x:Name="RowBorder" Padding="12,10" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                                 Cursor="Hand" MouseLeftButtonUp="ResultItem_Click">
                             <!-- Fade the add-to-map button in/out as the row is hovered -->
                             <Border.Triggers>
@@ -450,42 +442,42 @@
                                     <WrapPanel Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,4,0,0"
                                                Visibility="{Binding HasBadges, Converter={StaticResource BoolToVis}}">
                                         <!-- Feature Dataset badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,2"
+                                        <Border CornerRadius="3" Padding="5,2" Margin="0,0,4,2"
                                                 Background="#33FFC107"
                                                 Visibility="{Binding FeatureDatasetSimpleName, Converter={StaticResource NonEmptyToVis}}">
                                             <StackPanel Orientation="Horizontal">
-                                                <TextBlock Text="&#x1F4C2;" FontSize="9" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                                <TextBlock Text="&#x1F4C2;" FontSize="10" VerticalAlignment="Center" Margin="0,0,3,0"/>
                                                 <TextBlock Text="{Binding FeatureDatasetSimpleName}" FontSize="9" FontWeight="SemiBold"
                                                            Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
                                         <!-- Editor Tracking badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                        <Border CornerRadius="3" Padding="5,2" Margin="0,0,3,2"
                                                 Background="#33F7931A"
                                                 Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}"
                                                 ToolTip="Editor Tracking enabled">
-                                            <TextBlock Text="Tracking" FontSize="8" FontWeight="SemiBold" Foreground="#F7931A"/>
+                                            <TextBlock Text="Tracking" FontSize="9" FontWeight="SemiBold" Foreground="#F7931A"/>
                                         </Border>
                                         <!-- Archiving badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                        <Border CornerRadius="3" Padding="5,2" Margin="0,0,3,2"
                                                 Background="#33FFC107"
                                                 Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}"
                                                 ToolTip="Archiving enabled">
-                                            <TextBlock Text="Archiving" FontSize="8" FontWeight="SemiBold" Foreground="#FFC107"/>
+                                            <TextBlock Text="Archiving" FontSize="9" FontWeight="SemiBold" Foreground="#FFC107"/>
                                         </Border>
                                         <!-- Subtypes badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                        <Border CornerRadius="3" Padding="5,2" Margin="0,0,3,2"
                                                 Background="#33FF5722"
                                                 Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}"
                                                 ToolTip="Subtypes defined">
-                                            <TextBlock Text="Subtypes" FontSize="8" FontWeight="SemiBold" Foreground="#FF5722"/>
+                                            <TextBlock Text="Subtypes" FontSize="9" FontWeight="SemiBold" Foreground="#FF5722"/>
                                         </Border>
                                         <!-- Attribute Rules badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                        <Border CornerRadius="3" Padding="5,2" Margin="0,0,3,2"
                                                 Background="#3329B6F6"
                                                 Visibility="{Binding HasAttributeRules, Converter={StaticResource BoolToVis}}"
                                                 ToolTip="Attribute Rules defined">
-                                            <TextBlock Text="Attr Rules" FontSize="8" FontWeight="SemiBold" Foreground="#29B6F6"/>
+                                            <TextBlock Text="Attr Rules" FontSize="9" FontWeight="SemiBold" Foreground="#29B6F6"/>
                                         </Border>
                                     </WrapPanel>
 
@@ -511,7 +503,7 @@
                 </ListView>
             
             <!-- ── CACHE INFO PANEL ── -->
-            <ScrollViewer VerticalScrollBarVisibility="Auto"
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding ShowSeedCacheInfo, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <!-- Header -->
@@ -575,7 +567,7 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding ShowDetails, Converter={StaticResource BoolToVis}}">
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Visibility="{Binding ShowDetails, Converter={StaticResource BoolToVis}}">
                 <StackPanel>
                     <!-- Header -->
                     <Border Background="{DynamicResource FieldBg}" Padding="12,10"
@@ -619,23 +611,26 @@
                     </Border>
                     
                     <!-- Metadata -->
-                    <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
+                    <Border Background="{DynamicResource PanelBg}" Padding="12,12,12,10"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="METADATA" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                        <StackPanel>
+                            <TextBlock Text="METADATA" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Accent}" Margin="0,0,0,6"/>
+                            <TextBlock Text="{Binding DetailMetadata}" Foreground="{DynamicResource PrimaryText}"
+                                       FontSize="11" TextWrapping="Wrap" LineHeight="18"/>
+                        </StackPanel>
                     </Border>
-                    <Border Background="{DynamicResource PanelBg}" Padding="12,8"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="{Binding DetailMetadata}" Foreground="{DynamicResource PrimaryText}"
-                                   FontSize="11" TextWrapping="Wrap" LineHeight="18"/>
-                    </Border>
-                    
+
                     <!-- Fields -->
-                    <Border Background="{DynamicResource FieldBg}" Padding="12,8" Margin="0,1,0,0"
-                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="FIELDS" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource Accent}"/>
+                    <Border Background="{DynamicResource PanelBg}" Padding="12,10,12,4"
+                            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,0">
+                        <StackPanel>
+                            <TextBlock Text="FIELDS" FontSize="10" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Accent}" Margin="0,0,0,0"/>
+                        </StackPanel>
                     </Border>
-                    <Border Padding="12,8" Margin="0,0,0,1"
-                            Background="{DynamicResource FieldBg}"
+                    <Border Padding="12,6,12,8"
+                            Background="{DynamicResource PanelBg}"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                             Visibility="{Binding DetailAccessError, Converter={StaticResource BoolToVis}}">
                         <TextBlock FontSize="11" TextWrapping="Wrap" LineHeight="18"
@@ -647,17 +642,8 @@
                     <ItemsControl ItemsSource="{Binding DetailFields}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border Padding="12,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource PanelBg}"/>
-                                            <Style.Triggers>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter Property="Background" Value="{DynamicResource FieldBg}"/>
-                                                </Trigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
+                                <Border Padding="12,7" Background="{DynamicResource PanelBg}"
+                                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -712,7 +698,7 @@
         </Grid>
 
         <!-- ═══ STATUS BAR ═══ -->
-        <Border Grid.Row="6" Background="{DynamicResource FieldBg}" Padding="12,5"
+        <Border Grid.Row="6" Background="{DynamicResource PanelBg}" Padding="12,6"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -749,7 +735,7 @@
         </Border>
         <!-- ═══ FINE PRINT ═══ -->
         <Border Grid.Row="7" Background="{DynamicResource PanelBg}" Padding="12,4,12,5"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+                BorderThickness="0">
             <TextBlock FontSize="9" Foreground="{DynamicResource SecondaryText}" Opacity="0.6"
                        TextTrimming="CharacterEllipsis">
                 <Run Text="SDE Search ·"/>

@@ -7,6 +7,17 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ## 2026-03-10
 
+### Visual rhythm and readability improvements
+
+- **Coloured dots removed** from the Filters checkboxes — plain text labels only, matching the cleaner results-badge approach
+- **Section subheadings** ("DATABASE CONNECTION", "FILTERS", "RESULTS") enlarged from 10 → 11 px for better hierarchy
+- A **RESULTS subheader** now appears above the results list, consistent with the other named sections
+- **Flag badges** in each result row are slightly larger (font 8→9 px, taller padding) so they read at a glance
+- **Result row left edge** brought in line with section headings (12 px), and **vertical padding** increased (10 px) for breathing room
+- **Control panel** (connection + search + filters) unified to a single background — no more alternating `FieldBg`/`PanelBg` boxing between the three sections; a single bottom divider separates controls from results
+- **Detail view** METADATA and FIELDS sections simplified: labels and content are now in one block instead of paired alternating bordered boxes, removing the accordion-of-boxes feel
+- **Dividers reduced**: removed border between connection and search rows, removed progress-row bottom border, removed fine-print top border, and unified status-bar background
+
 ### Results list and connection UX polish
 
 - Flag indicators in the results list are now **labelled pill badges** ("Tracking", "Archiving", "Subtypes", "Attr Rules") instead of coloured dots — each flag is identifiable at a glance without relying on colour alone
