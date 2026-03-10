@@ -7,6 +7,14 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ## 2026-03-10
 
+### Results list and connection UX polish
+
+- Flag indicators in the results list are now **labelled pill badges** ("Tracking", "Archiving", "Subtypes", "Attr Rules") instead of coloured dots — each flag is identifiable at a glance without relying on colour alone
+- The **add-to-map button** is now a clean map-pin icon only (no ＋ symbol) and is **invisible by default**, fading in smoothly only when hovering over a result row
+- **"Add connection manually…"** is now the last item in the database connection dropdown — selecting it opens the file-browse dialog directly — the separate expander section has been removed
+- **Item names** in the results list are rendered in a heavier weight and slightly larger font for better scanability
+- The filters section no longer has a bottom divider line, blending more naturally into the results area; inner padding is increased so controls don't crowd the edges
+
 ### Filter panel redesign
 
 - The **Type** dropdown is now labelled **Geometry type** for clarity

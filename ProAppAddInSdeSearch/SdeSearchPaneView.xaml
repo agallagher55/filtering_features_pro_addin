@@ -230,16 +230,17 @@
         </Border>
 
         <!-- ═══ CONNECTION ═══ -->
-        <Border Grid.Row="1" Background="{DynamicResource FieldBg}" Padding="12,8" 
+        <Border Grid.Row="1" Background="{DynamicResource FieldBg}" Padding="12,8"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
             <StackPanel>
-                <TextBlock Text="DATABASE CONNECTION" FontSize="10" FontWeight="SemiBold" 
+                <TextBlock Text="DATABASE CONNECTION" FontSize="10" FontWeight="SemiBold"
                            Foreground="{DynamicResource Accent}" Margin="0,0,0,6"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
+                    <!-- The last item in the dropdown is a sentinel that opens the file-browse dialog -->
                     <ComboBox Grid.Column="0" ItemsSource="{Binding Connections}"
                               SelectedItem="{Binding SelectedConnection, Mode=TwoWay}"
                               Style="{StaticResource ThemedComboBox}" MinHeight="30"/>
@@ -249,30 +250,6 @@
                         <TextBlock Text="↻" FontSize="13" FontWeight="Bold"/>
                     </Button>
                 </Grid>
-                <Expander Header="Add connection manually..." Foreground="{DynamicResource SecondaryText}"
-                          FontSize="10" Margin="0,6,0,0" Background="Transparent" BorderThickness="0">
-                    <StackPanel Margin="0,6,0,0">
-                        <Button Command="{Binding BrowseSdeCommand}" Style="{StaticResource SecBtn}" 
-                                HorizontalAlignment="Left" Padding="10,5" Margin="0,0,0,6">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="📂" FontSize="12" Margin="0,0,6,0"/>
-                                <TextBlock Text="Browse for .sde file..." FontSize="11"/>
-                            </StackPanel>
-                        </Button>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBox Grid.Column="0" Text="{Binding ManualSdePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource ThemedTextBox}" MinHeight="26" VerticalContentAlignment="Center"
-                                     FontSize="11" ToolTip="Paste path to .sde file" KeyDown="ManualPath_KeyDown"/>
-                            <Button Grid.Column="1" Command="{Binding AddManualPathCommand}" Style="{StaticResource PrimaryBtn}"
-                                    Margin="4,0,0,0" Padding="8,4">
-                                <TextBlock Text="Add" FontSize="11"/>
-                            </Button>
-                        </Grid>
-                    </StackPanel>
-                </Expander>
             </StackPanel>
         </Border>
 
@@ -305,17 +282,17 @@
 
         <!-- ═══ FILTERS (collapsible) ═══ -->
         <Border Grid.Row="3" Background="{DynamicResource FieldBg}"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-            <Expander IsExpanded="True" Background="Transparent" BorderThickness="0" Padding="12,4,12,0">
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0">
+            <Expander IsExpanded="True" Background="Transparent" BorderThickness="0" Padding="12,6,12,0">
                 <Expander.HeaderTemplate>
                     <DataTemplate>
                         <TextBlock Text="FILTERS" FontSize="10" FontWeight="SemiBold"
                                    Foreground="{DynamicResource Accent}" Margin="4,0,0,0"/>
                     </DataTemplate>
                 </Expander.HeaderTemplate>
-                <StackPanel Margin="0,6,0,8">
+                <StackPanel Margin="4,8,4,12">
                     <!-- Geometry Type dropdown -->
-                    <Grid Margin="0,0,0,8">
+                    <Grid Margin="0,0,0,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
@@ -405,8 +382,29 @@
                 </ListView.ItemContainerStyle>
                 <ListView.ItemTemplate>
                     <DataTemplate>
-                        <Border Padding="10,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+                        <Border x:Name="RowBorder" Padding="10,7" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                                 Cursor="Hand" MouseLeftButtonUp="ResultItem_Click">
+                            <!-- Fade the add-to-map button in/out as the row is hovered -->
+                            <Border.Triggers>
+                                <EventTrigger RoutedEvent="UIElement.MouseEnter">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="AddMapBtn"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="1" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="UIElement.MouseLeave">
+                                    <BeginStoryboard>
+                                        <Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="AddMapBtn"
+                                                             Storyboard.TargetProperty="Opacity"
+                                                             To="0" Duration="0:0:0.12"/>
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </Border.Triggers>
                             <Border.Style>
                                 <Style TargetType="Border">
                                     <Setter Property="Background" Value="{DynamicResource PanelBg}"/>
@@ -430,29 +428,29 @@
                                     </Grid.RowDefinitions>
 
                                     <!-- Geometry vector icon (outlined) -->
-                                    <Viewbox Grid.Column="0" Grid.RowSpan="3" Width="18" Height="18" Margin="0,0,8,0" VerticalAlignment="Center">
+                                    <Viewbox Grid.Column="0" Grid.RowSpan="3" Width="18" Height="18" Margin="0,0,9,0" VerticalAlignment="Center">
                                         <Path Data="{Binding GeometryIconType, Converter={StaticResource GeomPathConv}}"
                                               Stroke="{Binding GeometryIconType, Converter={StaticResource GeomColorConv}}"
                                               StrokeThickness="2.2" Fill="Transparent"
                                               Stretch="Uniform" Width="20" Height="20"/>
                                     </Viewbox>
 
-                                    <StackPanel Grid.Column="1" Grid.Row="0" Orientation="Horizontal">
-                                        <TextBlock Text="{Binding SimpleName}"
-                                                   Foreground="{DynamicResource PrimaryText}" FontSize="12" FontWeight="Medium"
-                                                   TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
-                                    </StackPanel>
+                                    <!-- Item name — bold and slightly larger for clarity -->
+                                    <TextBlock Grid.Column="1" Grid.Row="0"
+                                               Text="{Binding SimpleName}"
+                                               Foreground="{DynamicResource PrimaryText}" FontSize="13" FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
 
                                     <StackPanel Grid.Column="1" Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,2,0,0">
                                         <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource SecondaryText}"
                                                    FontSize="10" TextTrimming="CharacterEllipsis" Opacity="0.85"/>
                                     </StackPanel>
 
-                                    <!-- Badges row: Feature dataset + flags -->
-                                    <WrapPanel Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,3,0,0"
+                                    <!-- Badges row: Feature dataset + flag badges -->
+                                    <WrapPanel Grid.Column="1" Grid.Row="2" Grid.ColumnSpan="2" Margin="0,4,0,0"
                                                Visibility="{Binding HasBadges, Converter={StaticResource BoolToVis}}">
                                         <!-- Feature Dataset badge -->
-                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,0"
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,4,2"
                                                 Background="#33FFC107"
                                                 Visibility="{Binding FeatureDatasetSimpleName, Converter={StaticResource NonEmptyToVis}}">
                                             <StackPanel Orientation="Horizontal">
@@ -461,42 +459,50 @@
                                                            Foreground="{DynamicResource AccentLight}" VerticalAlignment="Center"/>
                                             </StackPanel>
                                         </Border>
-                                        <!-- Editor Tracking: Bitcoin orange -->
-                                        <Ellipse Width="7" Height="7" Fill="#F7931A"
-                                                 Margin="0,0,4,0" VerticalAlignment="Center"
-                                                 Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}"
-                                                 ToolTip="Editor Tracking"/>
-                                        <!-- Archiving: amber -->
-                                        <Ellipse Width="7" Height="7" Fill="#FFC107"
-                                                 Margin="0,0,4,0" VerticalAlignment="Center"
-                                                 Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}"
-                                                 ToolTip="Archiving"/>
-                                        <!-- Subtypes: coral/deep-orange -->
-                                        <Ellipse Width="7" Height="7" Fill="#FF5722"
-                                                 Margin="0,0,4,0" VerticalAlignment="Center"
-                                                 Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}"
-                                                 ToolTip="Subtypes"/>
-                                        <!-- Attribute Rules: cyan (complementary) -->
-                                        <Ellipse Width="7" Height="7" Fill="#29B6F6"
-                                                 Margin="0,0,4,0" VerticalAlignment="Center"
-                                                 Visibility="{Binding HasAttributeRules, Converter={StaticResource BoolToVis}}"
-                                                 ToolTip="Attribute Rules"/>
+                                        <!-- Editor Tracking badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                                Background="#33F7931A"
+                                                Visibility="{Binding HasEditorTracking, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Editor Tracking enabled">
+                                            <TextBlock Text="Tracking" FontSize="8" FontWeight="SemiBold" Foreground="#F7931A"/>
+                                        </Border>
+                                        <!-- Archiving badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                                Background="#33FFC107"
+                                                Visibility="{Binding IsArchived, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Archiving enabled">
+                                            <TextBlock Text="Archiving" FontSize="8" FontWeight="SemiBold" Foreground="#FFC107"/>
+                                        </Border>
+                                        <!-- Subtypes badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                                Background="#33FF5722"
+                                                Visibility="{Binding HasSubtypes, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Subtypes defined">
+                                            <TextBlock Text="Subtypes" FontSize="8" FontWeight="SemiBold" Foreground="#FF5722"/>
+                                        </Border>
+                                        <!-- Attribute Rules badge -->
+                                        <Border CornerRadius="3" Padding="5,1" Margin="0,0,3,2"
+                                                Background="#3329B6F6"
+                                                Visibility="{Binding HasAttributeRules, Converter={StaticResource BoolToVis}}"
+                                                ToolTip="Attribute Rules defined">
+                                            <TextBlock Text="Attr Rules" FontSize="8" FontWeight="SemiBold" Foreground="#29B6F6"/>
+                                        </Border>
                                     </WrapPanel>
 
-                                    <Button Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
+                                    <!-- Add-to-map button: invisible at rest, fades in on row hover -->
+                                    <Button x:Name="AddMapBtn"
+                                            Grid.Column="2" Grid.Row="0" Grid.RowSpan="2"
+                                            Opacity="0"
                                             Visibility="{Binding CanAddToMap, Converter={StaticResource BoolToVis}}"
-                                            ToolTip="Add to active map" Padding="4,3" Margin="6,0,0,0"
+                                            ToolTip="Add to active map" Padding="5,4" Margin="6,0,0,0"
                                             VerticalAlignment="Center" Click="AddToMapButton_Click"
                                             Style="{StaticResource AddMapBtn}">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <Viewbox Width="13" Height="13" Margin="0,0,2,0" VerticalAlignment="Center">
-                                                <Canvas Width="24" Height="24">
-                                                    <Path Fill="{DynamicResource Accent}"
-                                                          Data="M12,2 C8.13,2 5,5.13 5,9 C5,14.25 12,22 12,22 C12,22 19,14.25 19,9 C19,5.13 15.87,2 12,2 Z M12,11.5 C10.62,11.5 9.5,10.38 9.5,9 C9.5,7.62 10.62,6.5 12,6.5 C13.38,6.5 14.5,7.62 14.5,9 C14.5,10.38 13.38,11.5 12,11.5 Z"/>
-                                                </Canvas>
-                                            </Viewbox>
-                                            <TextBlock Text="＋" FontSize="12" Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
-                                        </StackPanel>
+                                        <Viewbox Width="14" Height="14" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource Accent}"
+                                                      Data="M12,2 C8.13,2 5,5.13 5,9 C5,14.25 12,22 12,22 C12,22 19,14.25 19,9 C19,5.13 15.87,2 12,2 Z M12,11.5 C10.62,11.5 9.5,10.38 9.5,9 C9.5,7.62 10.62,6.5 12,6.5 C13.38,6.5 14.5,7.62 14.5,9 C14.5,10.38 13.38,11.5 12,11.5 Z"/>
+                                            </Canvas>
+                                        </Viewbox>
                                     </Button>
                                 </Grid>
                             </Border>
