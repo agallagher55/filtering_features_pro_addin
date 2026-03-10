@@ -608,6 +608,7 @@ namespace ProAppAddInSdeSearch
                     int tbls = cached.Count(d => d.DatasetType == "Table");
                     int fds = cached.Count(d => d.DatasetType == "Feature Dataset");
                     int rels = cached.Count(d => d.DatasetType == "Relationship Class");
+                    int rasters = cached.Count(d => d.DatasetType == "Raster Dataset" || d.DatasetType == "Mosaic Dataset");
 
                     string cacheInfo;
                     if (usedSeedCache)
@@ -651,7 +652,8 @@ namespace ProAppAddInSdeSearch
                         NotifyPropertyChanged(nameof(CacheContentsSummary));
                         IsSearching = false;
                         ProgressText = "";
-                        StatusText = $"{connName} ({cacheInfo}): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
+                        StatusText = $"{connName} ({cacheInfo}): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships"
+                            + (rasters > 0 ? $", {rasters} rasters" : "");
                     });
                     return;
                 }
@@ -676,11 +678,16 @@ namespace ProAppAddInSdeSearch
                         // Pre-fetch all definition lists so the total is known upfront
                         // and the progress bar can show a real fraction instead of spinning.
                         ReportProgress("Counting datasets...");
-                        var allFDDefs  = gdb.GetDefinitions<FeatureDatasetDefinition>().ToList();
-                        var allFCDefs  = gdb.GetDefinitions<FeatureClassDefinition>().ToList();
-                        var allTblDefs = gdb.GetDefinitions<TableDefinition>().ToList();
-                        var allRelDefs = gdb.GetDefinitions<RelationshipClassDefinition>().ToList();
-                        int totalExpected = allFDDefs.Count + allFCDefs.Count + allTblDefs.Count + allRelDefs.Count;
+                        var allFDDefs     = gdb.GetDefinitions<FeatureDatasetDefinition>().ToList();
+                        var allFCDefs     = gdb.GetDefinitions<FeatureClassDefinition>().ToList();
+                        var allTblDefs    = gdb.GetDefinitions<TableDefinition>().ToList();
+                        var allRelDefs    = gdb.GetDefinitions<RelationshipClassDefinition>().ToList();
+                        var allRasterDefs = gdb.GetDefinitions<RasterDatasetDefinition>().ToList();
+                        List<MosaicDatasetDefinition> allMosaicDefs;
+                        try { allMosaicDefs = gdb.GetDefinitions<MosaicDatasetDefinition>().ToList(); }
+                        catch { allMosaicDefs = new List<MosaicDatasetDefinition>(); }
+                        int totalExpected = allFDDefs.Count + allFCDefs.Count + allTblDefs.Count + allRelDefs.Count
+                                          + allRasterDefs.Count + allMosaicDefs.Count;
                         RunOnUI(() => { ProgressMax = totalExpected; ProgressValue = 0; });
 
                         // ── Feature Datasets + their contained feature classes ─────────────────────
@@ -878,16 +885,73 @@ namespace ProAppAddInSdeSearch
                         }
                         catch { }
 
+                        // ── Raster Datasets ───────────────────────
+                        ReportProgress($"Relationships done. Loading raster datasets...");
+                        try
+                        {
+                            foreach (var def in allRasterDefs)
+                            {
+                                try
+                                {
+                                    var item = new SdeDatasetItem
+                                    {
+                                        Name             = def.GetName(),
+                                        SimpleName       = GetSimpleName(def.GetName()),
+                                        DatasetType      = "Raster Dataset",
+                                        GeometryIconType = "Raster",
+                                        CanAddToMap      = true,
+                                        ConnectionPath   = connPath
+                                    };
+                                    TryLoadMetadata(item, def);
+                                    DetectDates(item);
+                                    BuildSearchTexts(item);
+                                    localDatasets.Add(item);
+                                    total++; processed++;
+                                }
+                                catch { }
+                            }
+                        }
+                        catch { }
+
+                        // ── Mosaic Datasets ───────────────────────
+                        try
+                        {
+                            foreach (var def in allMosaicDefs)
+                            {
+                                try
+                                {
+                                    var item = new SdeDatasetItem
+                                    {
+                                        Name             = def.GetName(),
+                                        SimpleName       = GetSimpleName(def.GetName()),
+                                        DatasetType      = "Mosaic Dataset",
+                                        GeometryIconType = "Mosaic",
+                                        CanAddToMap      = true,
+                                        ConnectionPath   = connPath
+                                    };
+                                    TryLoadMetadata(item, def);
+                                    DetectDates(item);
+                                    BuildSearchTexts(item);
+                                    localDatasets.Add(item);
+                                    total++; processed++;
+                                }
+                                catch { }
+                            }
+                        }
+                        catch { }
+
                         // ── Sort ─────────────────────────────────
                         ReportProgress($"Loaded {total} items. Sorting...");
                         localDatasets = localDatasets
                             .OrderBy(r => r.DatasetType switch
                             {
-                                "Feature Class" => 0,
-                                "Table" => 1,
-                                "Feature Dataset" => 2,
-                                "Relationship Class" => 3,
-                                _ => 4
+                                "Feature Class"    => 0,
+                                "Table"            => 1,
+                                "Raster Dataset"   => 2,
+                                "Mosaic Dataset"   => 3,
+                                "Feature Dataset"  => 4,
+                                "Relationship Class" => 5,
+                                _ => 6
                             })
                             .ThenBy(r => r.SimpleName)
                             .ToList();
@@ -907,6 +971,7 @@ namespace ProAppAddInSdeSearch
                         int tbls = localDatasets.Count(d => d.DatasetType == "Table");
                         int fds = localDatasets.Count(d => d.DatasetType == "Feature Dataset");
                         int rels = localDatasets.Count(d => d.DatasetType == "Relationship Class");
+                        int rasters = localDatasets.Count(d => d.DatasetType == "Raster Dataset" || d.DatasetType == "Mosaic Dataset");
 
                         // BuildAvailableItemTypes sets SelectedItemType which triggers ApplyFilterAndSearch
                         BuildAvailableItemTypes();
@@ -923,7 +988,8 @@ namespace ProAppAddInSdeSearch
                             ProgressText = "";
                             ProgressMax = 0;
                             ProgressValue = 0;
-                            StatusText = $"{connName} (just refreshed): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships";
+                            StatusText = $"{connName} (just refreshed): {fcs} FCs, {tbls} tables, {fds} datasets, {rels} relationships"
+                                + (rasters > 0 ? $", {rasters} rasters" : "");
                         });
                     }
                 }
@@ -988,15 +1054,18 @@ namespace ProAppAddInSdeSearch
 
         private static string TypeDisplayName(string iconType) => iconType switch
         {
-            "Dataset" => "Feature Dataset",
-            "Relationship" => "Relationship",
-            _ => iconType
+            "Dataset"      => "Feature Dataset",
+            "Relationship" => "Relationship Class",
+            "Raster"       => "Raster Dataset",
+            "Mosaic"       => "Mosaic Dataset",
+            _              => iconType
         };
 
         private static int TypeSortOrder(string iconType) => iconType switch
         {
             "Point" => 0, "Polyline" => 1, "Polygon" => 2, "Multipatch" => 3,
-            "Table" => 4, "Dataset" => 5, "Relationship" => 6, _ => 7
+            "Table" => 4, "Raster" => 5, "Mosaic" => 6,
+            "Dataset" => 7, "Relationship" => 8, _ => 9
         };
 
         private void ApplyFilterAndSearch()
@@ -1419,6 +1488,52 @@ namespace ProAppAddInSdeSearch
             }
         }
 
+        private void TryLoadMetadata(SdeDatasetItem item, RasterDatasetDefinition definition)
+        {
+            try
+            {
+                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name);
+                var catalogItem = ItemFactory.Instance.Create(itemPath);
+                if (catalogItem != null)
+                {
+                    string xml = catalogItem.GetXml();
+                    if (!string.IsNullOrEmpty(xml))
+                    {
+                        item.HasMetadata = true;
+                        item.RawMetadataXml = xml;
+                        ParseMetadataXml(item, xml);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Metadata load error for {item.Name}: {ex.Message}");
+            }
+        }
+
+        private void TryLoadMetadata(SdeDatasetItem item, MosaicDatasetDefinition definition)
+        {
+            try
+            {
+                string itemPath = System.IO.Path.Combine(item.ConnectionPath, item.Name);
+                var catalogItem = ItemFactory.Instance.Create(itemPath);
+                if (catalogItem != null)
+                {
+                    string xml = catalogItem.GetXml();
+                    if (!string.IsNullOrEmpty(xml))
+                    {
+                        item.HasMetadata = true;
+                        item.RawMetadataXml = xml;
+                        ParseMetadataXml(item, xml);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Metadata load error for {item.Name}: {ex.Message}");
+            }
+        }
+
         private void ParseMetadataXml(SdeDatasetItem item, string xml)
         {
             try
@@ -1541,6 +1656,8 @@ namespace ProAppAddInSdeSearch
                         LayerFactory.Instance.CreateLayer(uri, map);
                     else if (item.DatasetType == "Table")
                         StandaloneTableFactory.Instance.CreateStandaloneTable(uri, map);
+                    else if (item.DatasetType == "Raster Dataset" || item.DatasetType == "Mosaic Dataset")
+                        LayerFactory.Instance.CreateLayer(uri, map);
                     ReportStatus($"✓ Added \"{item.SimpleName}\" to map");
                 }
                 catch (Exception ex)
@@ -2133,7 +2250,8 @@ namespace ProAppAddInSdeSearch
         // Increment when the cache schema changes (e.g. new properties on SdeDatasetItem)
         // v6: Fields removed from cache — lazy-loaded on demand instead
         // v7: SeedCacheTimestamp added to detect updated seed deployments
-        private const int CurrentCacheVersion = 7;
+        // v8: Raster Dataset and Mosaic Dataset types added
+        private const int CurrentCacheVersion = 8;
 
         private class CacheWrapper
         {

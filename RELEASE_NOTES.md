@@ -7,6 +7,13 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ## 2026-03-10
 
+### Raster dataset search
+
+- Raster datasets and mosaic datasets stored in enterprise SDE geodatabases are now enumerated and appear in search results alongside feature classes and tables.
+- Raster items can be filtered using the geometry-type dropdown — "Raster Dataset" and "Mosaic Dataset" entries appear automatically when rasters are present in the connected database.
+- Raster and mosaic layers can be added directly to the active map using the **Add to Map** button.
+- Raster datasets are shown with a red grid icon; mosaic datasets with a teal overlapping-tiles icon.
+
 ### Results list and filters spacing polish
 
 - **Result rows** use tighter vertical padding (8 px) for a more compact, scannable list
