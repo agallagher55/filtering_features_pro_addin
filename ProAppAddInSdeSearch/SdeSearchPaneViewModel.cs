@@ -40,7 +40,17 @@ namespace ProAppAddInSdeSearch
         // ── Connection state ──────────────────────────
         private ObservableCollection<SdeConnectionItem> _connections = new ObservableCollection<SdeConnectionItem>();
         private SdeConnectionItem _selectedConnection;
+        private SdeConnectionItem _lastRealConnection;
         private string _manualSdePath = "";
+
+        // Sentinel item that appears at the bottom of the connection dropdown.
+        // Selecting it opens the file-browse dialog instead of loading a real connection.
+        private static readonly SdeConnectionItem _addManuallySentinel = new SdeConnectionItem
+        {
+            Name = "⊕  Add connection manually...",
+            Path = string.Empty,
+            ConnectionType = "AddManually"
+        };
         private DateTime? _cacheTimestamp;
 
         // ── Full dataset cache ────────────────────────
@@ -190,6 +200,23 @@ namespace ProAppAddInSdeSearch
             get => _selectedConnection;
             set
             {
+                if (value?.ConnectionType == "AddManually")
+                {
+                    // Defer to ContextIdle so the ComboBox binding can finish its visual update,
+                    // then restore the previous real selection and open the file-browse dialog.
+                    var dispatcher = System.Windows.Application.Current?.Dispatcher;
+                    dispatcher?.BeginInvoke(
+                        System.Windows.Threading.DispatcherPriority.ContextIdle,
+                        new Action(() =>
+                        {
+                            _selectedConnection = _lastRealConnection;
+                            NotifyPropertyChanged(nameof(SelectedConnection));
+                            BrowseForSdeFile();
+                        }));
+                    return;
+                }
+
+                _lastRealConnection = value;
                 if (SetProperty(ref _selectedConnection, value))
                 {
                     InvalidateCommands();
@@ -432,20 +459,24 @@ namespace ProAppAddInSdeSearch
                             if (!Connections.Any(c => c.Path.Equals(m.Path, StringComparison.OrdinalIgnoreCase)))
                                 Connections.Add(m);
 
-                        StatusText = Connections.Count > 0
-                            ? $"{Connections.Count} connection(s) found — select one to browse"
-                            : "No connections found. Browse for an .sde file below.";
+                        // Always keep the sentinel as the last item in the dropdown.
+                        Connections.Add(_addManuallySentinel);
+
+                        var realCount = Connections.Count(c => c.ConnectionType != "AddManually");
+                        StatusText = realCount > 0
+                            ? $"{realCount} connection(s) found — select one to browse"
+                            : "No connections found. Use ⊕ Add connection manually... in the dropdown.";
                         ProgressText = "";
 
-                        // Restore previous selection, or auto-select if only one connection
+                        // Restore previous selection, or auto-select if only one real connection
                         if (previousPath != null)
                         {
                             var match = Connections.FirstOrDefault(c => c.Path.Equals(previousPath, StringComparison.OrdinalIgnoreCase));
                             if (match != null) SelectedConnection = match;
                         }
-                        else if (Connections.Count == 1)
+                        else if (realCount == 1)
                         {
-                            SelectedConnection = Connections.First();
+                            SelectedConnection = Connections.First(c => c.ConnectionType != "AddManually");
                         }
                     });
                 }
@@ -503,7 +534,12 @@ namespace ProAppAddInSdeSearch
                 Path = path,
                 ConnectionType = "Manual"
             };
-            Connections.Add(conn);
+            // Insert before the sentinel so it stays last.
+            var sentinelIdx = Connections.IndexOf(_addManuallySentinel);
+            if (sentinelIdx >= 0)
+                Connections.Insert(sentinelIdx, conn);
+            else
+                Connections.Add(conn);
             SelectedConnection = conn;
         }
 
