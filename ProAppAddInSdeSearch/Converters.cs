@@ -37,6 +37,12 @@ namespace ProAppAddInSdeSearch
             // Chain link
             ["Relationship"] = "M5,8 A3,3 0 1,1 5,12 M15,8 A3,3 0 1,0 15,12 M7,10 L13,10",
 
+            // 3×3 raster grid
+            ["Raster"] = "M2,2 L18,2 L18,18 L2,18 Z M2,8 L18,8 M2,14 L18,14 M8,2 L8,18 M14,2 L14,18",
+
+            // Two overlapping squares (mosaic tiles)
+            ["Mosaic"] = "M1,1 L13,1 L13,13 L1,13 Z M7,7 L19,7 L19,19 L7,19 Z",
+
             // Question mark
             ["Unknown"] = "M10,2 A8,8 0 1,1 10,18 A8,8 0 1,1 10,2 Z M8,7 Q8,4 10,4 Q12,4 12,7 Q12,9 10,10 L10,12 M10,14 L10,15"
         };
@@ -67,6 +73,8 @@ namespace ProAppAddInSdeSearch
             ["Table"]        = Color.FromRgb(0x78, 0x90, 0x9C), // Blue-gray
             ["Dataset"]      = Color.FromRgb(0xFF, 0xC1, 0x07), // Amber
             ["Relationship"] = Color.FromRgb(0x8D, 0x6E, 0x63), // Brown
+            ["Raster"]       = Color.FromRgb(0xE5, 0x39, 0x35), // Red
+            ["Mosaic"]       = Color.FromRgb(0x00, 0x89, 0x7B), // Teal
             ["Unknown"]      = Color.FromRgb(0x9E, 0x9E, 0x9E), // Gray
         };
 
