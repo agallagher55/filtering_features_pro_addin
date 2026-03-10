@@ -7,6 +7,13 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ## 2026-03-10
 
+### Results list and filters spacing polish
+
+- **Result rows** use tighter vertical padding (8 px) for a more compact, scannable list
+- **RESULTS subheader** no longer has a bottom divider line — the separator box between the heading and the list is gone
+- **FILTERS section** subheading now aligns precisely with DATABASE CONNECTION and RESULTS headings (12 px from left edge); the expand/collapse chevron moved to the right side of the heading row
+- Filter content (dropdown and checkboxes) aligns to the same left edge as the FILTERS label — no more left-side overflow
+
 ### Visual rhythm and readability improvements
 
 - **Coloured dots removed** from the Filters checkboxes — plain text labels only, matching the cleaner results-badge approach
