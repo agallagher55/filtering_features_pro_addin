@@ -5,6 +5,20 @@ Minor internal fixes, seed cache data updates, and documentation-only commits ar
 
 ---
 
+## 2026-03-10
+
+### Filter panel redesign
+
+- The **Type** dropdown is now labelled **Geometry type** for clarity
+- The type dropdown has been moved into the Filters section, consolidating all filtering controls in one place
+- The entire Filters section is now **collapsible** — click the "FILTERS" header to expand or collapse it, freeing up vertical space when not needed
+- The **Filter** button has been renamed **Search** and is slightly wider to emphasise it as the primary action
+- The **↻ Refresh** button next to the connection selector is now icon-only (no label), reducing its visual weight relative to the Search button
+- The add-to-map button now shows a **map pin icon** alongside the **＋** symbol, making the action immediately recognisable
+- The **"Add connection manually…"** expander label is slightly smaller to reduce visual emphasis
+
+---
+
 ## 2026-03-09
 
 ### UI redesign — Bitcoin-orange accent theme

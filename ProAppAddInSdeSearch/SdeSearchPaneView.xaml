@@ -194,8 +194,7 @@
             <RowDefinition Height="Auto"/><!-- header -->
             <RowDefinition Height="Auto"/><!-- connection -->
             <RowDefinition Height="Auto"/><!-- search -->
-            <RowDefinition Height="Auto"/><!-- show types -->
-            <RowDefinition Height="Auto"/><!-- filters -->
+            <RowDefinition Height="Auto"/><!-- filters (collapsible) -->
             <RowDefinition Height="Auto"/><!-- progress -->
             <RowDefinition Height="*"/>  <!-- content -->
             <RowDefinition Height="Auto"/><!-- status -->
@@ -246,15 +245,12 @@
                               Style="{StaticResource ThemedComboBox}" MinHeight="30"/>
                     <Button Grid.Column="1" Command="{Binding ReloadDataCommand}"
                             ToolTip="Reload data from the database, rebuilding the local cache"
-                            Style="{StaticResource SecBtn}" Margin="4,0,0,0" Padding="8,4">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="↻" FontSize="13" FontWeight="Bold" Margin="0,0,4,0"/>
-                            <TextBlock Text="Refresh" FontSize="11" VerticalAlignment="Center"/>
-                        </StackPanel>
+                            Style="{StaticResource SecBtn}" Margin="4,0,0,0" Padding="6,4">
+                        <TextBlock Text="↻" FontSize="13" FontWeight="Bold"/>
                     </Button>
                 </Grid>
-                <Expander Header="Add connection manually..." Foreground="{DynamicResource SecondaryText}" 
-                          FontSize="11" Margin="0,6,0,0" Background="Transparent" BorderThickness="0">
+                <Expander Header="Add connection manually..." Foreground="{DynamicResource SecondaryText}"
+                          FontSize="10" Margin="0,6,0,0" Background="Transparent" BorderThickness="0">
                     <StackPanel Margin="0,6,0,0">
                         <Button Command="{Binding BrowseSdeCommand}" Style="{StaticResource SecBtn}" 
                                 HorizontalAlignment="Left" Padding="10,5" Margin="0,0,0,6">
@@ -290,8 +286,8 @@
                     </Grid.ColumnDefinitions>
                     <TextBox Grid.Column="0" Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                              Style="{StaticResource ThemedTextBox}" MinHeight="30" VerticalContentAlignment="Center" KeyDown="SearchBox_KeyDown"/>
-                    <Button Grid.Column="1" Command="{Binding SearchCommand}" Style="{StaticResource PrimaryBtn}" Margin="6,0,0,0" MinHeight="30">
-                        <TextBlock Text="Filter"/>
+                    <Button Grid.Column="1" Command="{Binding SearchCommand}" Style="{StaticResource PrimaryBtn}" Margin="6,0,0,0" MinHeight="30" Padding="16,6">
+                        <TextBlock Text="Search"/>
                     </Button>
                     <Button Grid.Column="2" Command="{Binding ClearCommand}" Style="{StaticResource SecBtn}" Margin="4,0,0,0" MinHeight="30">
                         <TextBlock Text="✕" FontSize="12"/>
@@ -307,61 +303,64 @@
             </StackPanel>
         </Border>
 
-        <!-- ═══ ITEM TYPE FILTER ═══ -->
-        <Border Grid.Row="3" Background="{DynamicResource FieldBg}" Padding="12,6"
+        <!-- ═══ FILTERS (collapsible) ═══ -->
+        <Border Grid.Row="3" Background="{DynamicResource FieldBg}"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="Type:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
-                           VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox Grid.Column="1"
-                          ItemsSource="{Binding AvailableItemTypes}"
-                          SelectedItem="{Binding SelectedItemType, Mode=TwoWay}"
-                          Style="{StaticResource ThemedComboBox}"
-                          MinHeight="26"/>
-            </Grid>
-        </Border>
-
-        <!-- ═══ TAG FILTERS ═══ -->
-        <Border Grid.Row="4" Background="{DynamicResource FieldBg}" Padding="12,8"
-                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-            <StackPanel>
-                <TextBlock Text="FILTERS" FontSize="10" FontWeight="SemiBold"
-                           Foreground="{DynamicResource Accent}" Margin="0,0,0,6"/>
-                <UniformGrid Columns="2">
-                    <CheckBox IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7" Height="7" Fill="#F7931A" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <TextBlock Text="Editor Tracking" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </CheckBox>
-                    <CheckBox IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7" Height="7" Fill="#FFC107" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <TextBlock Text="Archiving" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </CheckBox>
-                    <CheckBox IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7" Height="7" Fill="#FF5722" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <TextBlock Text="Subtypes" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </CheckBox>
-                    <CheckBox IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7" Height="7" Fill="#29B6F6" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                            <TextBlock Text="Attribute Rules" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </CheckBox>
-                </UniformGrid>
-            </StackPanel>
+            <Expander IsExpanded="True" Background="Transparent" BorderThickness="0" Padding="12,4,12,0">
+                <Expander.HeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="FILTERS" FontSize="10" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource Accent}" Margin="4,0,0,0"/>
+                    </DataTemplate>
+                </Expander.HeaderTemplate>
+                <StackPanel Margin="0,6,0,8">
+                    <!-- Geometry Type dropdown -->
+                    <Grid Margin="0,0,0,8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Geometry type:" Foreground="{DynamicResource SecondaryText}" FontSize="11"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding AvailableItemTypes}"
+                                  SelectedItem="{Binding SelectedItemType, Mode=TwoWay}"
+                                  Style="{StaticResource ThemedComboBox}"
+                                  MinHeight="26"/>
+                    </Grid>
+                    <!-- Flag filters -->
+                    <UniformGrid Columns="2">
+                        <CheckBox IsChecked="{Binding FilterEditorTracking}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="#F7931A" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock Text="Editor Tracking" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding FilterArchiving}" Style="{StaticResource ThemedCheckBox}" Margin="0,0,0,3">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="#FFC107" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock Text="Archiving" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding FilterSubtypes}" Style="{StaticResource ThemedCheckBox}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="#FF5722" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock Text="Subtypes" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </CheckBox>
+                        <CheckBox IsChecked="{Binding FilterAttributeRules}" Style="{StaticResource ThemedCheckBox}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="#29B6F6" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBlock Text="Attribute Rules" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </CheckBox>
+                    </UniformGrid>
+                </StackPanel>
+            </Expander>
         </Border>
 
         <!-- ═══ PROGRESS ═══ -->
-        <Border Grid.Row="5" Background="{DynamicResource PanelBg}" Padding="12,8"
+        <Border Grid.Row="4" Background="{DynamicResource PanelBg}" Padding="12,8"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
                 Visibility="{Binding IsSearching, Converter={StaticResource BoolToVis}}">
             <StackPanel>
@@ -375,7 +374,7 @@
         </Border>
 
         <!-- ═══ MAIN CONTENT ═══ -->
-        <Grid Grid.Row="6">
+        <Grid Grid.Row="5">
 
             <!-- ── RESULTS LIST ── -->
             <!-- ListView with VirtualizingStackPanel: only renders visible rows, greatly
@@ -489,7 +488,15 @@
                                             ToolTip="Add to active map" Padding="4,3" Margin="6,0,0,0"
                                             VerticalAlignment="Center" Click="AddToMapButton_Click"
                                             Style="{StaticResource AddMapBtn}">
-                                        <TextBlock Text="＋" FontSize="14" Foreground="{DynamicResource Accent}"/>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <Viewbox Width="13" Height="13" Margin="0,0,2,0" VerticalAlignment="Center">
+                                                <Canvas Width="24" Height="24">
+                                                    <Path Fill="{DynamicResource Accent}"
+                                                          Data="M12,2 C8.13,2 5,5.13 5,9 C5,14.25 12,22 12,22 C12,22 19,14.25 19,9 C19,5.13 15.87,2 12,2 Z M12,11.5 C10.62,11.5 9.5,10.38 9.5,9 C9.5,7.62 10.62,6.5 12,6.5 C13.38,6.5 14.5,7.62 14.5,9 C14.5,10.38 13.38,11.5 12,11.5 Z"/>
+                                                </Canvas>
+                                            </Viewbox>
+                                            <TextBlock Text="＋" FontSize="12" Foreground="{DynamicResource Accent}" VerticalAlignment="Center"/>
+                                        </StackPanel>
                                     </Button>
                                 </Grid>
                             </Border>
@@ -588,7 +595,15 @@
                                 </Button>
                                 <Button Grid.Column="3" Command="{Binding AddToMapCommand}" Style="{StaticResource PrimaryBtn}" Padding="8,4"
                                         Visibility="{Binding SelectedResult.CanAddToMap, Converter={StaticResource BoolToVis}}">
-                                    <TextBlock Text="＋ Map" FontSize="11"/>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Viewbox Width="12" Height="12" Margin="0,0,4,0" VerticalAlignment="Center">
+                                            <Canvas Width="24" Height="24">
+                                                <Path Fill="{DynamicResource AccentText}"
+                                                      Data="M12,2 C8.13,2 5,5.13 5,9 C5,14.25 12,22 12,22 C12,22 19,14.25 19,9 C19,5.13 15.87,2 12,2 Z M12,11.5 C10.62,11.5 9.5,10.38 9.5,9 C9.5,7.62 10.62,6.5 12,6.5 C13.38,6.5 14.5,7.62 14.5,9 C14.5,10.38 13.38,11.5 12,11.5 Z"/>
+                                            </Canvas>
+                                        </Viewbox>
+                                        <TextBlock Text="＋ Map" FontSize="11"/>
+                                    </StackPanel>
                                 </Button>
                             </Grid>
                             <ProgressBar IsIndeterminate="True" Height="2" Foreground="{DynamicResource Accent}" 
@@ -691,7 +706,7 @@
         </Grid>
 
         <!-- ═══ STATUS BAR ═══ -->
-        <Border Grid.Row="7" Background="{DynamicResource FieldBg}" Padding="12,5"
+        <Border Grid.Row="6" Background="{DynamicResource FieldBg}" Padding="12,5"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -727,7 +742,7 @@
             </Grid>
         </Border>
         <!-- ═══ FINE PRINT ═══ -->
-        <Border Grid.Row="8" Background="{DynamicResource PanelBg}" Padding="12,4,12,5"
+        <Border Grid.Row="7" Background="{DynamicResource PanelBg}" Padding="12,4,12,5"
                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
             <TextBlock FontSize="9" Foreground="{DynamicResource SecondaryText}" Opacity="0.6"
                        TextTrimming="CharacterEllipsis">
