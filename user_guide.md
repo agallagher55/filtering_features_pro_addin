@@ -100,7 +100,7 @@ Three checkboxes below the search box control what is searched. They can be comb
 | **Metadata** | Description, summary, purpose, credits, and tags from ArcGIS metadata |
 | **Tags** | ArcGIS metadata tags/keywords only |
 
-> Toggling a checkbox immediately re-runs the current search — no need to click Search again.
+> Toggling a checkbox immediately re-runs the current search - no need to click Search again.
 
 ---
 
@@ -113,10 +113,10 @@ The **FILTERS** section (collapsible) narrows results independently of the searc
 Use the **Geometry type** dropdown to show only a specific type of item:
 
 - All Types
-- Feature Class — Point
-- Feature Class — Polyline
-- Feature Class — Polygon
-- Feature Class — Multipatch
+- Feature Class - Point
+- Feature Class - Polyline
+- Feature Class - Polygon
+- Feature Class - Multipatch
 - Table
 - Feature Dataset
 - Relationship Class
