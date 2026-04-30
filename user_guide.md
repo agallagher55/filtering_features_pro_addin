@@ -156,12 +156,12 @@ Click any row in the results list to open its detail view. Click **◀ Back** to
 
 The detail view shows:
 
-- **Full qualified name** — database, schema, and dataset name
+- **Full qualified name** - database, schema, and dataset name
 - **Dataset type** and **geometry type**
 - **Spatial reference**
-- **Metadata** — description, summary, purpose, tags, credits, and use constraints (sourced from ArcGIS metadata XML)
-- **Created / Modified dates** — these are the metadata authoring dates, not the actual data timestamps
-- **Field list** — all fields with their data type, nullability, and coded-value domain entries
+- **Metadata** - description, summary, purpose, tags, credits, and use constraints (sourced from ArcGIS metadata XML)
+- **Created / Modified dates** - these are the metadata authoring dates, not the actual data timestamps
+- **Field list** - all fields with their data type, nullability, and coded-value domain entries
 
 ---
 
