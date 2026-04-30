@@ -27,7 +27,7 @@ A dockable ArcGIS Pro add-in for quickly finding and adding feature classes, tab
 - ArcGIS Pro **3.3** or later
 - Windows (x64)
 
-### Option A — Install from a shared folder (recommended for HRM users)
+### Option A - Install from a shared folder (recommended for HRM users)
 
 1. Open ArcGIS Pro and go to **Settings → Add-In Manager → Options**.
 2. Click **Add Folder** and enter the following path:
@@ -38,7 +38,7 @@ A dockable ArcGIS Pro add-in for quickly finding and adding feature classes, tab
 3. Make sure **"Load all Add-Ins without restrictions"** is selected.
 4. Restart ArcGIS Pro.
 
-### Option B — Install from an `.esriAddinX` file
+### Option B - Install from an `.esriAddinX` file
 
 1. Double-click the `.esriAddinX` file to install it automatically, **or** copy it to:
    ```
